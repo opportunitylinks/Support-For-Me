@@ -1,0 +1,257 @@
+# $Id: fr.po,v 1.1.2.2 2010/03/30 14:30:00 schuyler1d Exp $
+#
+# French translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  multisite_manager.admin.inc: n/a
+#  multisite_manager.module,v 1.8.4.2 2008/03/12 19:10:34 schuyler1d
+#  multisite_manager.info,v 1.2.4.1 2008/03/12 16:47:45 schuyler1d
+#  admin/multisite_manager_batch_install.php: n/a
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: French translation for Drupal Multisite Manager\n"
+"POT-Creation-Date: 2009-02-13 21:03+0100\n"
+"PO-Revision-Date: 2009-02-17 19:15+0100\n"
+"Last-Translator: Stéphane Bordage <sbordage@breek.fr>\n"
+"Language-Team: Stéphane Bordage, Breek <sbordage@breek.fr>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: french\n"
+"X-Poedit-Country: France\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
+
+#: multisite_manager.admin.inc:14
+msgid "You must, at least, enter a database or table prefix string.  Both cannot be empty"
+msgstr "Vous devez au moins saisir une base de données ou un prefixe de table. Aucun des deux ne peut être vide"
+
+#: multisite_manager.admin.inc:30
+msgid "Run drupal sites' cron jobs"
+msgstr "Exécuter les tâches plannifiées (cron) des sites"
+
+#: multisite_manager.admin.inc:33
+msgid "This sets whether each drupal site's cron jobs will be run when this master site's cron is run.  If this is unset no drupal site will have their cron jobs executed regardless of each individual sites' settings for running cron jobs."
+msgstr "Cela défini si les tâches planifiées de chaque site (cron) seront exécutées quand celles de ce site maître seront exécutées. Si décoché, aucune tâche planifiée (cron) d'aucun site ne sera exécutée et ce sans se soucier de chaque paramétrage local de site."
+
+#: multisite_manager.admin.inc:37
+msgid "Install site upon node creation"
+msgstr "Installer le site à la création du noeud"
+
+#: multisite_manager.admin.inc:40
+msgid "This sets whether Drupal site's creation is done upon node creation or wether it is delayed until the batch create script is run."
+msgstr "Cela défini si la création d'un site est réalisée à la création du noeud ou si elle est différée jusqu'a ce que le script de traitement par lot soit exécuter."
+
+#: multisite_manager.admin.inc:44
+msgid "Table prefix default"
+msgstr "Préfixe de table par défaut"
+
+#: multisite_manager.admin.inc:47
+msgid "This is the default prefix that will be forced on those without \"advanced database setup\" rights. {shortname} stands for the shortname field input when creating the site.  If you make the default database different from the current one, you can reasonably make this empty."
+msgstr "C'est le préfixe par défaut qui sera imposé à ceux ne possédant pas de droits de paramétrage avancé de la base de données. {shortname} représente le nom court utilisé lors de la création du site ??? . Si vous avez choisi une base de données par défaut différente de l'actuelle, vous pouvez laissez ce champ vide."
+
+#: multisite_manager.admin.inc:51
+msgid "Database name default"
+msgstr "Nom par défaut de la base de données"
+
+#: multisite_manager.admin.inc:54
+msgid "If left blank, it will use the current database.  Otherwise, \"{shortname}\" will be replaced, so another common default might be \"{shortname}_drupal\". Do NOT set this unless the current database account has CREATE access in MySQL or CREATEDB access in Postgres. To ensure database data is not overwritten, if you install in another database, it is either required that your current database have some db_prefix OR that it will be a new database--i.e. that your entry here includes \"{shortname}\"."
+msgstr "Si non renseigné, le nom de la base de données actuelle sera utilisé.  Sinon, \"{shortname}\" sera remplacé, un autre paramètre par défaut pourrait être \"{shortname}_drupal\". Ne pas utiliser cette option sauf si votre compte de base de données vous donne le droit à l'option CREATE dans MySQL ou CREATEDB dans Postgres. Pour s'assurer que la base de données ne soit pas réécrites lors de l'installation d'une autre base, il est nécessaire que votre base de données actuelle est un db_prefix OU ce sera une nouvelle base de données. Dans le cas présent, il est nécessaire que votre entrée inclue \"{shortname}\". Une erreur aura lieu sinon."
+
+#: multisite_manager.admin.inc:58
+msgid "Link default"
+msgstr "Lien par défaut"
+
+#: multisite_manager.admin.inc:61
+msgid "This is where the site will be accessible by default.  If you setup your ./sites/default/settings.php correctly along with your web server (e.g. apache/htaccess) config, you can anticipate where the new site will live and forward the user to the new site location upon creation.  Here, there are two dynamic variables, {base_url} and {shortname}."
+msgstr "C'est l'endroit où le site sera accessible par défaut. Si vous paramétrez votre ./sites/default/settings.php correctement en fonction de la configuration serveur web (apache/htaccess par exemple) , vous pouvez anticiper où le nouveau site existera et donc transférer les utilisateurs vers cet endroit dès la création. Voici deux variables dynamiques, {base_url} et {shortname}."
+
+#: multisite_manager.admin.inc:65
+msgid "Admin account on new sites"
+msgstr "Compte administrateur des nouveaux sites"
+
+#: multisite_manager.admin.inc:68
+msgid "Copy the admin account from this site"
+msgstr "Copier le compte administrateur depuis ce site"
+
+#: multisite_manager.admin.inc:69
+msgid "Copy the account of the creator"
+msgstr "Copier le compte du créateur"
+
+#: multisite_manager.admin.inc:70
+#, fuzzy
+msgid "Do nothing (only choose this if all profiles available do something instead.  the default profile does not)"
+msgstr "Ne rien faire (ne choisisssez cette option que si tous les profils font quelque chose au lieu de cela. Le profil par défaut ne le fait pas)"
+
+#: multisite_manager.admin.inc:77
+msgid "Profile default"
+msgstr "Profil par défaut"
+
+#: multisite_manager.module:29
+msgid "These defaults will need corresponding changes in settings.php.  Consult help for other required changes on the file system."
+msgstr "Ces paramètres par défaut nécessiteront les mêmes modifications dans settings.php. Consultez l'aide pour connaitre tous les changements recquis au niveau du système de fichiers."
+
+#: multisite_manager.module:38
+msgid "Drupal Site"
+msgstr "Site Drupal"
+
+#: multisite_manager.module:40
+msgid "Enables creation of drupal sites stored in the same database with a different prefix over the web without database info."
+msgstr "Permet la création de plusieurs sites enregistrés dans la même base de données. "
+
+#: multisite_manager.module:86
+msgid "Error running cron for %title due to %error when accessing %url."
+msgstr "Erreur lors de l'exécution du cron pour %title dû à %error lors de l'accès à %url."
+
+#: multisite_manager.module:116
+msgid "This Drupal site will be created on the next batch creation."
+msgstr "Ce site sera créé lors du prochain traitement par lot."
+
+#: multisite_manager.module:129
+msgid "Multisite Manager settings"
+msgstr "Paramètres de Multisite Manager"
+
+#: multisite_manager.module:130;138
+msgid "Configure the database and url defaults for new sites."
+msgstr "Configurer la base de données et l'URL par défaut des nouveaux sites."
+
+#: multisite_manager.module:137
+msgid "Defaults"
+msgstr "Paramètres par défaut"
+
+#: multisite_manager.module:146
+msgid "settings.php help"
+msgstr "aide de settings.php"
+
+#: multisite_manager.module:148
+msgid "What to put in the settings.php file"
+msgstr "Ce qu'il faut mettre dans le fichier settings.php"
+
+#: multisite_manager.module:235
+msgid "Run Drupal Sites' Cron"
+msgstr "Exécuter les crons du site"
+
+#: multisite_manager.module:238
+msgid "This sets whether this drupal site's cron jobs will be run when the master site's cron is run and is configured to trigger sites.  By default, it is set ON only if the master is configured to trigger sites."
+msgstr "Cela défini si le cron de ce site sera exécuté lorsque le cron du site maître sera exécuté (et s'il est configuré pour déclencher des actions sur les sites enfants). Par défaut, la valeur est \"ON\" seulement si le site maître est configuré pour déclencher les sites enfants."
+
+#: multisite_manager.module:243
+msgid "Shortname"
+msgstr "Nom court"
+
+#: multisite_manager.module:247
+msgid "This short name will be used in the database as a unique identifier and also possibly the default site location.  This must only be numbers and letters"
+msgstr "Ce nom court sera utilisé dans la base de données comme un identifiant unique et peut être aussi pour la localisation par défaut du site. Uniquement des nombres et des lettres."
+
+#: multisite_manager.module:253
+msgid "Profile"
+msgstr "Profil"
+
+#: multisite_manager.module:262
+msgid "Advanced"
+msgstr "Avancé"
+
+#: multisite_manager.module:266
+msgid "Once created, modifying these values will not do anything except change the local record.  If you need to move the database around, you must do it yourself through the database.  Then update the record here."
+msgstr "Une fois créées, modifier ces valeurs n'aura aucun effet mis à part de changer les enregistrements locaux. Si vous avez besoin de déplacer la base de données, vous devrez le faire par vous même et ensuite mettre à jour l'enregistrement içi."
+
+#: multisite_manager.module:270
+msgid "Site Link"
+msgstr "Lien du site"
+
+#: multisite_manager.module:277
+msgid "Table prefix"
+msgstr "Préfixe de la table"
+
+#: multisite_manager.module:284
+msgid "Database username"
+msgstr "Nom d'utilisateur de la base de données"
+
+#: multisite_manager.module:288
+msgid "Do NOT set this unless your current database account has GRANT option in MySQL or CREATEUSER in Postgres."
+msgstr "Ne pas utiliser cette option sauf si votre compte de base de données actuel vous donne donne le droit à l'option GRANT dans MySQL ou CREATEUSER dans Postgres."
+
+#: multisite_manager.module:292
+msgid "Database password"
+msgstr "Mot de passe de la base de données"
+
+#: multisite_manager.module:299
+msgid "Database name"
+msgstr "Nom de la base de données"
+
+#: multisite_manager.module:305
+msgid "Do NOT set this unless your current database account has CREATE option in MySQL or CREATEDB in Postgres.  To ensure database data is not overwritten, if you install in another database, it is either required that your current database have some db_prefix OR that it will be a new database--i.e. that your entry here includes \"{shortname}\".  (An error will result otherwise)"
+msgstr "Ne pas utiliser cette option sauf si votre compte de base de données vous donne le droit à l'option CREATE dans MySQL ou CREATEDB dans Postgres. Pour s'assurer que la base de données ne soit pas réécrites lors de l'installation d'une autre base, il est nécessaire que votre base de données actuelle est un db_prefix OU ce sera une nouvelle base de données. Dans le cas présent, il est nécessaire que votre entrée inclue \"{shortname}\". Une erreur aura lieu sinon."
+
+#: multisite_manager.module:336
+msgid "The database table prefix you have entered, %shortname, is invalid. The table prefix can only contain alphanumeric characters, underscores or dots."
+msgstr "Le préfixe de base de données que vous avez saisi, %shortname, n'est pas valide. Le préfixe ne peut contenir que des caractères alphanumériques, des underscores (_) ou des points (.)."
+
+#: multisite_manager.module:344
+msgid "The shortname you have entered, %shortname, is already taken. Please use a different one."
+msgstr "Le nom court que vous avez saisi, %shortname, est déjà pris. Utilisez un nom court différent."
+
+#: multisite_manager.module:347
+msgid "The database location the site would be installed already exists. Please use a different shortname or database path and prefix."
+msgstr "La place où la base de données va être installée existe déjà. Utilisez un nom court, un chemin ou un prefix différents. ???"
+
+#: multisite_manager.module:353;621
+msgid "One or more required modules are missing!"
+msgstr "Un ou plusieurs module(s) recquis sont manquants !"
+
+#: multisite_manager.module:365
+msgid "Just use shortname.  You do not have access to modify the database settings directly.  If this is necessary, please contact your drupal site administrator."
+msgstr "Utilisez juste le nom court. Vous n'avez pas accès à la modification directe des paramètres de la base de données.Contactez votre administrateur."
+
+#: multisite_manager.module:373
+msgid "Error installing profile!!!!!!"
+msgstr "Erreur lors de l'installation du profil"
+
+#: multisite_manager.module:887
+msgid "Site"
+msgstr "Site"
+
+#: multisite_manager.module:63;82
+msgid "cron"
+msgstr "cron"
+
+#: multisite_manager.module:63
+msgid "Skipping cron for %title."
+msgstr "Sauter le cron pour %title."
+
+#: multisite_manager.module:82
+msgid "Running cron for %title at \"%url\"."
+msgstr "Exécuter le cron pour %title à \"%url\"."
+
+#: multisite_manager.module:179
+msgid "create drupal site"
+msgstr "créer un site Drupal"
+
+#: multisite_manager.module:180
+msgid "delete own drupal site"
+msgstr "supprimer son site Drupal"
+
+#: multisite_manager.module:181
+msgid "advanced database setup"
+msgstr "paramétrage avancé de la base de données"
+
+#: multisite_manager.module:182
+msgid "administer multisite defaults"
+msgstr "gérer les réglages multisite par défaut"
+
+#: multisite_manager.module:0
+msgid "multisite_manager"
+msgstr "multisite_manager"
+
+#: multisite_manager.info:0
+msgid "MultiSite Manager"
+msgstr "MultiSite Manager"
+
+#: multisite_manager.info:0
+msgid "Allows creation of new drupal sites from a central drupal site without the creator having access to database info.  The new site is installed either with a different database prefix or in a newly created database."
+msgstr "Permet la création de nouveaux sites à partir d'un site central sans que le créateur n'ai besoin d'avoir accès à la base de données. Le nouveau site est installé soit dans la base de données actuelle avec un préfixe spécifique soit dans une nouvelle base."
+
+#: admin/multisite_manager_batch_install.php:24
+msgid "This script is only executable from the command line."
+msgstr "Ce script n'est exécutable qu'en ligne de commande."
+

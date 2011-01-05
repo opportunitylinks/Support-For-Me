@@ -1,0 +1,14 @@
+; $Id: evince_dir_atoz.info $
+name = Evince Directory A to Z
+description = Evince Directory A to Z listing
+package = Other
+core = "6.x"
+dependencies[] = "evince_dir"
+dependencies[] = "evince_api"
+; 
+version = "6.x-1.0"
+core = "6.x"
+project = "evince_dir_atoz"
+datestamp = "1280226300"
+php = 5.2
+

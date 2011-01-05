@@ -1,0 +1,325 @@
+<?php
+/**
+ * @file
+ * evince webservice directory search
+ *
+ * provides the basic search pages to filter evince database records
+ * and create nodes for use by the directory display page
+ */
+
+
+/**
+ * Implementation of hook_block().
+ */
+
+function evince_dir_search_block($op = 'list', $delta = 0, $edit = array()) {
+  switch ($op) {
+    case 'list':
+      $blocks[0]['info'] = t('QuickSearch');
+      $blocks[0]['title'] = t('<none>');
+      $blocks[0]['cache'] = BLOCK_NO_CACHE;
+      $blocks[1]['info'] = t('DirFilters');
+      $blocks[1]['title'] = t('<none>');
+      $blocks[1]['cache'] = BLOCK_NO_CACHE;
+      $blocks[2]['info'] = t('DirInfo');
+      $blocks[2]['title'] = t('Dir Info');
+      $blocks[2]['cache'] = BLOCK_NO_CACHE;
+      return $blocks;
+    case 'view':
+      if ($delta == 0) {
+        $block['subject'] = 'QuickSearch';
+        $block['content'] = drupal_get_form('evince_dir_search_quicksearch_form');
+      }
+      elseif ($delta == 1) {
+        $block['subject'] = 'Filters';
+        $block['content'] = drupal_get_form('evince_dir_search_filters_form');
+      }
+      elseif ($delta == 2) {
+        $block['content'] = t('Click on the filter boxes to refine your search, then click on the Apply button');
+      }
+      return $block;
+    }
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function evince_dir_search_menu() {
+  $items['evince/dir/new'] = array(
+    'title' => 'New Search',
+    'description' => 'Start a new search.',
+    'page callback' => 'evince_dir_search_new',
+    'page arguments' => NULL,
+    'access arguments' => array('access evince directory'),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => 10,
+  );
+  return $items;
+}
+
+function evince_dir_search_new() {
+  evince_dir_delete_nodes();
+  evince_dir_delete_search();
+  drupal_goto('evince/dir');
+}
+
+function evince_dir_search_quicksearch_form(&$form_state = NULL) {
+  $form = array();
+  $form['#tree'] = TRUE;
+
+  $form['search'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Search'),
+    '#attributes' => array('id' => 'fs-search'),
+  );
+
+  // if on search page check for content otherwise set search text to nothing
+  //if (request_uri() == "/evince/dir") {
+    $search = evince_dir_get_search();
+
+    // if no search context, delete any nodes created by e.g. categories
+    if (!$search) {
+      evince_dir_delete_nodes();
+      $quick_search = '';
+    }
+    else {
+      $quick_search = $search['quick_search'];
+    }
+  //}
+  //else {
+  //  $quick_search = '';
+  //}
+
+  $form['search']['quick_search'] = array(
+    '#type' => 'textfield',
+    '#size' => 20,
+    '#default_value' => $quick_search,
+  );
+
+  $form['search']['submit-qs'] = array(
+    '#type' => 'submit',
+    '#value' => t('Search'),
+    '#name' => 'submit-qs',
+  );
+
+  return $form;
+}
+
+function evince_dir_search_filters_form(&$form_state = NULL) {
+
+  // if no saved search, no filters form needed
+  $search = evince_dir_get_search();
+
+  if ($search == NULL) {
+    return NULL;
+  }
+
+  $form['#tree'] = TRUE;
+
+  $filters = $search['filters'];
+  $filter_values = $search['filter_values'];
+  $proximity = $search['proximity'];
+  $found = variable_get('foundrecs', '');
+
+  $form['proximity'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Proximity',
+    '#attributes' => array('id' => 'proximity'),
+  );
+
+  $form['proximity']['postcode'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Please enter your full postcode',
+    '#size' => 10,
+    '#name' => 'postcode',
+    '#default_value' => $proximity['#postcode'],
+    '#weight' => 10,
+  );
+
+  $form['proximity']['radius'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Radius (miles)',
+    '#size' => 2,
+    '#name' => 'radius',
+    '#default_value' => $proximity['#radius'],
+    '#weight' => 12,
+  );
+
+  $form['proximity']['submit-proximity'] = array(
+    '#type' => 'submit',
+    '#value' => t('Filter Results'),
+    '#name' => 'submit-proximity',
+    '#weight' => 15,
+  );
+
+  if ($filters) {
+    $form['fs-filters'] = array(
+      '#type' => 'fieldset',
+      '#title' => 'Filters',
+      '#attributes' => array('id' => 'fs-filters'),
+    );
+
+
+    foreach ((array)$filters as $fname => $fvals) {
+      $form['fs-filters']['filters'][$fname] = array(
+        '#type' => 'checkboxes',
+        '#weight' => 20,
+        '#title' => $fname == 'fdctype' ? 'Type' : 'Location',
+        '#options' => array_flip($fvals),
+        '#default_value' => (array)$filter_values[$fname],
+      );
+    }
+
+    $form['fs-filters']['submit-filter'] = array(
+      '#type' => 'submit',
+      '#value' => t('Filter Results'),
+      '#name' => 'submit-filters',
+      '#weight' => 30,
+    );
+  };
+
+  return $form;
+}
+
+function evince_dir_search_quicksearch_form_validate($form, &$form_state) {
+  if (!$form_state['values']['search']['quick_search']) {
+    form_set_error('quick_search', t('Please type something in the search box'));
+  }
+  // check if quicksearch is a valid postcode, if so, reduce to first part only
+  check_postcode($form_state['values']['search']['quick_search']);
+}
+
+function evince_dir_search_quicksearch_form_submit($form, &$form_state) {
+  $quick_search = $form_state['values']['search']['quick_search'];
+
+  evince_dir_search_get_search_results($quick_search, NULL, NULL);
+  unset($form_state['storage']);
+  $form_state['redirect'] = 'evince/dir';
+}
+
+function evince_dir_search_filters_form_validate($form, &$form_state) {
+  // ensure valid postcode - or warn, also radius is numeric <20 >0
+  $postcode = $form_state['clicked_button']['#post']['postcode'];
+  $radius = $form_state['clicked_button']['#post']['radius'];
+  $code = array($postcode);
+
+  if (!check_postcode($postcode)) {
+    $form_state['clicked_button']['#post']['postcode'] = NULL;
+    $form_state['clicked_button']['#post']['radius'] = NULL;
+  }
+  else {
+    $code = get_lat_long($code);
+    $long = $code['Longitude'];
+    $lat = $code['Latitude'];
+    $form_state['values']['proximity']['latitude'] = $lat;
+    $form_state['values']['proximity']['longitude'] = $long;
+    $form_state['values']['proximity']['postcode'] = $form_state['clicked_button']['#post']['postcode'];
+    if (isset($radius)) {
+      if ($radius > 25 || $radius < 1) {
+        $radius = 2;
+      }
+      $form_state['values']['proximity']['radius'] = $radius;
+    }
+    else {
+      $form_state['clicked_button']['#post']['postcode'] = NULL;
+      $form_state['clicked_button']['#post']['radius'] = NULL;
+    }
+  }
+}
+
+function evince_dir_search_filters_form_submit($form, &$form_state) {
+  $search = evince_dir_get_search();
+  $quick_search = $search['quick_search'];
+
+  $filters = $form_state['values']['fs-filters']['filters'];
+  $proximity = array(
+    '#latitude' => $form_state['values']['proximity']['latitude'],
+    '#longitude' => $form_state['values']['proximity']['longitude'],
+    '#radius' => $form_state['values']['proximity']['radius'],
+    '#postcode' => $form_state['values']['proximity']['postcode'],
+  );
+  evince_dir_search_get_search_results($quick_search, $filters, $proximity);
+  unset($form_state['storage']);
+  $form_state['redirect'] = 'evince/dir';
+}
+
+function evince_dir_search_get_search_results($quick_search, $filters, $proximity) {
+  $maxrec = variable_get('evince_dir_maxrec', '');
+
+  $record_types = array('ascservices', 'ascserviceproviders');
+  $start = 0 ;
+  $count = $maxrec; // take from admin page variable webmech 16/9/10 ola
+  $url_sort = NULL;
+  $sort_order = NULL;   // will be relevance? maybe automatic?
+  $facets = array('fdctype', 'fvillagetownname');
+  $longitude = $proximity['#longitude'];
+  $latitude = $proximity['#latitude'];
+  $radius = $proximity['#radius'];
+
+  $url_filters = array();
+  foreach ((array)$filters as $filter) {
+    foreach ((array)$filter as $k => $v) {
+      if ($v) {
+        $url_filters[] = $v;
+      }
+    }
+  }
+
+  // save state of filter checkboxes for saving in search node later
+  $search_filter_values = $filters;
+
+  $url_starting_with = NULL;
+
+  $results = evince_api_facet_search($record_types, $quick_search, $start, $count, $url_sort, $sort_order, $facets, $url_filters, $url_starting_with, $latitude, $longitude, $radius);
+
+  if ($results['status'] != 'OK') {
+    if ($results['status'] == 'not configured') {
+      drupal_set_message('Please '. l('configure the API', 'admin/settings/evince-api') .' first.', 'error');
+    }
+    else {
+      drupal_set_message('Error reading search results: '. $results['status'], 'warning');
+    }
+    return;
+  }
+  if (empty($results['entries'])) {
+    drupal_set_message('No results returned from search.', 'warning');
+    evince_dir_delete_nodes();
+    evince_dir_delete_search();
+    evince_dir_set_search(array('quick_search' => $quick_search));
+    return;
+  }
+
+  // process facets etc, delete old nodes and create new nodes of type ASC_Result
+  evince_dir_delete_nodes();
+  evince_dir_delete_search();
+
+  foreach ($results['entries'] as $item) {
+    evince_dir_create_node($item);
+
+  }
+
+  $filters = $results['facets'][0]['child']['http://opp-links.org.uk/XMLSchema/FacetResults']['field'];
+
+  foreach ((array)$filters as $filter) {
+    $filter_values = $filter['child']['http://opp-links.org.uk/XMLSchema/FacetResults']['value'];
+    if (!empty($filter_values)) {
+      foreach ($filter_values as $value) {
+        $name = $value['attribs']['']['name'];
+        $qs = $value['attribs']['']['qs'];
+        $count = $value['data'];
+        $f[$filter['attribs']['']['name']][$name .' ('. $count .')'] = $qs;
+      }
+    }
+  }
+
+  evince_dir_set_search(array(
+    'quick_search' => $quick_search,
+    'qs_count' => count($results['entries']),
+    'filters' => $f,
+    'filter_values' => $search_filter_values,
+    'proximity' => $proximity,
+  ));
+}
+
+include_once(drupal_get_path('module', 'evince_dir') .'/include/evince_dir_node_code.inc');
+include_once(drupal_get_path('module', 'evince_dir') .'/include/postcode.inc');

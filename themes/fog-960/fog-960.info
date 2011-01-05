@@ -1,0 +1,18 @@
+; $Id: fog-960.info,v 1.1.2.3 2009/06/05 17:52:14 dvessel Exp $
+
+name = Fields of Gold 960
+description = Support for Me Fields of Gold 960
+screenshot = images/screenshot.png
+core = 6.x
+engine = phptemplate
+
+; Stylesheets. Anything within the "framework" folder will be placed before all others.
+stylesheets[all][] = styles/framework/reset.css
+stylesheets[all][] = styles/framework/text.css
+stylesheets[all][] = styles/framework/960.css
+stylesheets[all][] = styles/framework/debug.css
+
+; Theme specific styles. Any sub-themes should override this.
+stylesheets[all][] = styles/styles.css
+
+

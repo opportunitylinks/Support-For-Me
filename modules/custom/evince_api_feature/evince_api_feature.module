@@ -1,0 +1,3 @@
+<?php
+
+include_once('evince_api_feature.features.inc');

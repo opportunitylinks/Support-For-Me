@@ -1,0 +1,13 @@
+; $Id: advanced_blog.info,v 1.1 2009/05/21 06:21:49 eidolonnight Exp $
+name = "Advanced Blog"
+description = Added features for Drupal blogs.
+core = 6.x
+dependencies[] = blog
+
+
+; Information added by drupal.org packaging script on 2009-05-21
+version = "6.x-1.0-beta1"
+core = "6.x"
+project = "advanced_blog"
+datestamp = "1242887706"
+

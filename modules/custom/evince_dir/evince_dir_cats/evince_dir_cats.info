@@ -1,0 +1,14 @@
+; $Id: evince_dir_cats.info $
+name = Evince Directory Zones & Categories
+description = Evince Directory Zones and Categories listing
+package = Other
+core = "6.x"
+dependencies[] = "evince_dir"
+dependencies[] = "evince_api"
+; 
+version = "6.x-1.0"
+core = "6.x"
+project = "evince_dir_cats"
+datestamp = "1280226300"
+php = 5.2
+

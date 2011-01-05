@@ -1,0 +1,21 @@
+// $Id: changelog.txt,v 1.1.2.4 2009/06/19 21:06:46 aaron Exp $
+
+Changelog for the Views Slideshow: ImageFlow module.
+
+June 2009
+---------
+ * #437982: Add support for new options from the plugin (aaron).
+ * #422096/sinasquax: Link in image broken (sinasquax/aaron).
+ * Fix view defaults (aaron).
+
+=====================================
+DRUPAL-6--1-0-ALPHA2 Release (aaron).
+=====================================
+
+April 2009
+----------
+ * Add view configuration options (aaron).
+
+March 2009
+----------
+ * Initial commit of the module (aaron).

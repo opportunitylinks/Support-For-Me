@@ -1,0 +1,77 @@
+<?php
+// $Id: advanced_blog.install,v 1.1 2009/05/21 06:21:49 eidolonnight Exp $
+/**
+ * @file
+ * Creates table for blog title and description.
+ *
+  */
+
+/* Installing advanced_blog */
+function advanced_blog_install() {
+  $result = drupal_install_schema('advanced_blog');
+  
+  if ($result[0]['success'] == 1) {
+    drupal_set_message(t('advanced_blog module installed succesfully.'));
+  } 
+  else {
+    drupal_set_message(t('advanced_blog module installation was unsuccesfull. The necessary database table may be created by hand. See the "README.txt" file in the "advanced_blog/" modules directory for instructions.', 'error'));
+  }
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function advanced_blog_schema() {
+  $schema['advanced_blog'] = array(
+    'description' => t('This holds the advanced_blog data.'),
+    'fields' => array(
+      'uid' => array(
+        'type' => 'int', 
+        'unsigned' => TRUE, 
+        'not null' => TRUE, 
+      ),
+      'title' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE, 
+      ),
+      'description' => array(
+        'type' => 'text', 
+        'not null' => TRUE, 
+      ),
+      'format' => array(
+        'type' => 'int', 
+        'unsigned' => TRUE, 
+        'not null' => TRUE, 
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('uid'),
+  );
+
+  return $schema;
+
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function advanced_blog_uninstall() {
+  drupal_uninstall_schema('advanced_blog');
+}
+
+function advanced_blog_update_1() {
+  $ret = array();
+  
+  db_add_field($ret, 'advanced_blog', 'format', array('type' => 'int', 'not null' => TRUE, 'default' => 0));
+
+  return $ret;
+}
+
+function advanced_blog_update_2() {
+  $ret = array();
+
+  db_change_field($ret, 'advanced_blog', 'uid', 'uid', array('type' => 'int', 'not null' => TRUE));
+
+  return $ret;
+}

@@ -1,0 +1,159 @@
+/* ###### declare variables ###### */
+/* colours */
+/* pantone 383c */
+/* typography */
+/* client requested Verdana */
+/* the css! */
+#page * {
+  font-family: Verdana, "Helvetica Neue", Helvetica, Arial, Sans-serif;
+}
+
+h1, h2, h3{
+	font-weight: bold;
+}
+
+h2 {
+	font-size: 110%;
+}
+
+div.view-display-id-page_1 table td.views-field views-field-field-contact-value{
+	width: 100px;
+}
+
+#menu ul li.selected a,
+#menu ul li.active a,
+#menu ul li.selected a:visited,
+#menu ul li.active a:visited,
+#menu ul li.selected a:active,
+#menu ul li.active a:active,
+#menu ul li.selected a:hover,
+#menu ul li.active a:hover,
+#menu ul li.selected a:visited:hover,
+#menu ul li.active a:visited:hover {
+  background: url(../images/menu-selected-blue.jpg) 0 0 repeat-x;
+  border-left: 1px solid #00709e;
+  border-right: 1px solid #00709e;
+}
+#banner {
+  background: #00709e url(../images/banner-background-blue.jpg) repeat-x;
+}
+#preface-wrapper {
+  background: url(../images/title-background-blue.jpg) bottom left no-repeat;
+}
+.ribbon {
+  background: transparent url(../images/ribbon-blue-big.png) 0 0 no-repeat;
+  width: 625px;
+}
+#main-wrapper h1.title {
+  background: url(../images/split-background-blue.jpg) 0 0 repeat-x;
+}
+#main-content h1, #main-content h2, #main-content h3 {
+  color: #16567e;
+}
+/* ##### forms and form elements #### */
+input.form-submit {
+  color: #fff;
+  background: #00709e;
+  border: 1px solid #00709e;
+}
+input.form-submit:hover {
+  background-color: #0290ca;
+}
+input.form-submit:active {
+  background-color: #bfd9e6;
+  color: #00709e;
+}
+#filters legend {
+  color: #fff;
+  background: #00709e;
+}
+fieldset {
+  border-color: #00709e;
+}
+.form-text {
+  border: 1px solid #bfd9e6;
+}
+.form-text:focus {
+  border: 1px solid #00709e;
+}
+/* directory view stuff */
+div.sfmtab {
+  border-color: #bfd9e6;
+}
+ul#tablinks li {
+  background: #f2fdfb;
+  border: 1px solid #bfd9e6;
+  border-bottom: none;
+  float: left;
+  padding: 4px 10px;
+  margin-right: 5px;
+}
+ul#tablinks li.active {
+  border-bottom: 1px solid #fff;
+  margin-bottom: -1px;
+}
+ul#tablinks li.active a, ul#tablinks li.active a:visited {
+  text-decoration: none;
+  font-weight: bold;
+}
+/* ##### stockton-specific stuff ##### */
+#content-bottom {
+  text-align: right;
+}
+ul#stockton-cats {
+  margin: 0;
+  padding: 0;
+}
+ul#stockton-cats li {
+  margin-bottom: 20px;
+  background: #fff;
+  display: block;
+  text-align: center;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.292969) 0px 2px 5px;
+}
+ul#stockton-cats li a, ul#stockton-cats li a:visited {
+  display: block;
+  color: #fff;
+  font-weight: bold;
+  overflow: hidden;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  height: 210px;
+  padding: 5px;
+  text-align: center;
+  font-size: 1.4em;
+  text-decoration: none;
+  line-height: 1.2;
+  text-shadow: rgba(0, 0, 0, 0.496094) 0px -1px 1px;
+}
+ul#stockton-cats li a:hover, ul#stockton-cats li a:visited:hover {
+  text-decoration: underline;
+}
+ul#stockton-cats li#advice  a {
+  background: #ffffff url(/sites/default/files/sbc-cat-advice-square.jpg) 0 0 no-repeat;
+}
+ul#stockton-cats li#hobbies  a {
+  background: #ffffff url(/sites/default/files/sbc-cat-hobbies-square.jpg) 0 0 no-repeat;
+}
+ul#stockton-cats li#housing  a {
+  background: #ffffff url(/sites/default/files/sbc-cat-housing-square.jpg) 0 0 no-repeat;
+}
+ul#stockton-cats li#health  a {
+  background: #ffffff url(/sites/default/files/sbc-cat-health-square.jpg) 0 0 no-repeat;
+}
+ul#stockton-cats li#carers  a {
+  background: #ffffff url(/sites/default/files/sbc-cat-carers-square.jpg) 0 0 no-repeat;
+}
+ul#stockton-cats li#travel  a {
+  background: #ffffff url(/sites/default/files/sbc-cat-transport-square.jpg) 0 0 no-repeat;
+}
+ul#stockton-cats li#money  a {
+  background: #ffffff url(/sites/default/files/sbc-cat-moneylegal-square.jpg) 0 0 no-repeat;
+}
+ul#stockton-cats li#work  a {
+  background: #ffffff url(/sites/default/files/sbc-cat-workvolunteering-square.jpg) 0 0 no-repeat;
+}

@@ -1,0 +1,192 @@
+<?php
+/**
+ * @file
+ * evince webservice directory zones and categories
+ *
+ * provides zones and categories listing
+ */
+
+include_once(drupal_get_path('module', 'evince_dir') .'/include/evince_dir_record.inc');
+
+/**
+ * Implementation of hook_menu().
+ */
+function evince_dir_cats_menu() {
+  $items['evince/dir/zones'] = array(
+    'title' => 'Zones',
+    'description' => 'zones',
+    'page callback' => 'evince_dir_cats_zones',
+    'page arguments' => NULL,
+    'access arguments' => array('access evince directory'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['evince/dir/category/%'] = array(
+    'title' => 'Directory',
+    'description' => 'Directory',
+    'page callback' => 'evince_dir_cats_category_browse',
+    'page arguments' => array(3),
+    'access arguments' => array('access evince directory'),
+    'type' => MENU_CALLBACK,
+    'weight' => 9,
+  );
+  $items['evince/dir/category/%/%'] = array(
+    'title' => 'Directory',
+    'description' => 'Directory',
+    'page callback' => 'evince_dir_cats_category_info',
+    'page arguments' => array(3, 4),
+    'access arguments' => array('access evince directory'),
+    'type' => MENU_CALLBACK,
+    'weight' => 9,
+  );
+  $items['evince/record/%/%'] = array(
+    'title' => '',
+    'description' => 'Single record display',
+    'page callback' => 'evince_dir_display_record',
+    'page arguments' => array(2, 3),
+    'access arguments' => array('access evince directory'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+
+/**
+ * Zones
+ */
+function evince_dir_cats_zones() {
+
+  $results = evince_api_get_categories();
+
+  if ($results['status'] != 'OK') {
+    drupal_set_message('Error reading results: '. $results['status'], 'warning');
+    return;
+  }
+  if (empty($results['entries'])) {
+    drupal_set_message('No data returned from search.', 'warning');
+    return;
+  }
+
+  $zones = array();
+  $model_name = 'http://opp-links.org.uk/XMLSchema/AtomModel';
+
+  foreach ($results['entries'] as $item) {
+    $subitem = $item['content'][0]['child'][$model_name]['model'][0]['child'][$model_name];
+    $record_id = $subitem['recordid'][0]['data'];
+    $zones[] = l($item['title'], 'evince/dir/category/'. $record_id);
+  }
+  $output = theme('item_list', $zones);
+  $output = '<div id="edcat">'. $output .'</div>';
+
+  // skip zones page if only one zone
+  $zno = count($zones);
+  if ($zno == 1) {
+    drupal_goto('evince/dir/category/'. $record_id);
+  }
+  return $output;
+}
+
+/**
+ * category browse
+ */
+function evince_dir_cats_category_browse($category_id) {
+
+  $data = evince_api_browse_category($category_id);
+  $xml = new SimpleXMLElement($data->data);
+  $xml = (array)$xml;
+
+  if (count($xml)) {
+    return evince_dir_cats_walk_categories($xml['Term'], $category_id);
+  }
+  else {
+    return 'nothing to display';
+  }
+}
+
+function evince_dir_cats_walk_categories($terms, $category_id) {
+  if (!$terms) return NULL;
+  $rows = array();
+  $title = 'DC.Title';  // (dots confuse object references)
+
+  foreach ($terms as $term) {
+    $rows[] = array(
+      l($term->$title, 'evince/dir/category/'. $category_id .'/'. $term->TermId)
+      . evince_dir_cats_walk_categories($term->Child, $category_id));
+  }
+
+  $headers = array('TermId', 'Title');
+  $output = theme('item_list', $rows);
+  return $output;
+}
+
+/**
+ * category info
+ */
+function evince_dir_cats_category_info($category_id, $term_id) {
+
+  $data = evince_api_category_info($category_id, $term_id);
+  $xml = new SimpleXMLElement($data->data);
+  $xml = (array)$xml;
+
+  $title_name = 'DC.Title';
+
+  $term = $xml['Term'];
+  $term_id = $term->TermId;
+  $term_title = $term->$title_name;
+
+  $parent = $term->Parent;
+  $parent_id = $parent->TermId;
+  $parent_title = $parent->$title_name;
+
+  if (!$parent_id) {
+    $list['parent'] = '&laquo; Back to '. l($parent_id ? $parent_title : 'directory', 'directory');
+  } 
+  else {
+    $list['parent'] = '&laquo; Back to '. l($parent_id ? $parent_title : 'directory', 'evince/dir/category/'. $category_id .'/'. $parent_id);
+  }
+  
+  $list['term'] = $term_title;
+
+  foreach ($term->Child as $child) {
+    $child_id = $child->TermId;
+    $child_title = $child->$title_name;
+    $list['children'][] = l($child_title, 'evince/dir/category/'. $category_id .'/'. $child_id);
+  }
+
+  $lists = array('data' => $list['parent'], 'children' => array('data' => $list['term'], 'children' => $list['children']));
+  
+  $output = theme('item_list', $lists);
+
+  $results = evince_api_records_in_term($category_id, $term_id);
+
+  if ($results['status'] != 'OK') {
+    if ($results['status'] == 'not configured') {
+      drupal_set_message('Please '. l('configure the API', 'admin/settings/evince-api') .' first.', 'error');
+    }
+    else {
+      drupal_set_message('Error reading results: '. $results['status'], 'warning');
+    }
+    return $output;
+  }
+  if (empty($results['entries'])) {
+    return $output;
+  }
+
+  evince_dir_delete_nodes();
+  evince_dir_delete_search();
+
+  foreach ($results['entries'] as $item) {
+    evince_dir_create_node($item);
+  }
+  $num_entries = count($results['entries']);
+
+  $output = evince_dir_tabs($num_entries);
+
+  return $output;
+}
+
+function compare_catname($a, $b)
+{
+  return strnatcmp($a['children'], $b['children']);
+}
+
+include_once(drupal_get_path('module', 'evince_dir') .'/include/evince_dir_node_code.inc');

@@ -1,0 +1,125 @@
+#filler
+{
+	height: 100px;
+	background-color: #36322e;
+}
+#header
+{
+    position: fixed;
+    z-index: 1000;
+    width: 100%;
+}
+#header .wrapper
+{
+	position: relative;
+}
+#header select
+{
+	position: absolute;
+	top: 34px;
+	left: 250px;
+	padding: 6px 8px;
+	color: #fff;
+	background-color: #1b1916;
+	border: 3px solid #37332f;
+	/*CSS3*/
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+}
+#header select option
+{
+	padding-right: 40px;
+}
+#menu li.more a,
+#menu li.more a:visited,
+#menu li.more a:active,
+#menu li.more a:hover
+{
+	height: 44px;
+	padding-top: 76px;
+	background: url(images/menu-more.png);
+}
+#menulinks
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: 1px solid #4e4a47;
+}
+#menulinks a,
+#menulinks a:visited
+{
+    display: block;
+    height: 32px;
+    width: 140px;
+    font-size: 13px;
+    text-align: center;
+    text-decoration: none;
+    line-height: 30px;
+    color: #fff;
+    background-color: #36322e;
+}
+#menulinks a:hover,
+#menulinks a:active
+{
+    background-color: #4e4a47;
+}
+#page
+{
+	padding-bottom: 100px;
+}
+#page .wrapper
+{
+	margin-top: -130px;
+}
+#page .title
+{
+	position: relative;
+	height: 250px;
+	padding: 1px;
+}
+#page .title .ribbon
+{
+	position: absolute;
+	top: 3px;
+	left: -37px;
+	width: 445px;
+	height: 85px;
+}
+#page .title .ribbon h1
+{
+	width: 320px;
+	padding-left: 60px;
+	font-size: 30px;
+	text-align: right;
+	line-height: 90px;
+}
+#page .title h2
+{
+	font-size: 30px;
+	margin: 115px 0 0 45px;
+}
+#page .title p
+{
+	width: 495px;
+	margin: 35px 0 0 45px;
+	font-size: 14px;
+	line-height: 18px;
+}
+#page .title .logo
+{
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	border: 1px solid #c5ebf7;
+}
+#page .split
+{
+	height: 21px;
+	padding: 9px 0 0 20px;
+	font-size: 11px;
+}
+#page .content
+{
+}

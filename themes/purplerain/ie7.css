@@ -1,0 +1,25 @@
+#microsite #header select
+{
+	top: 42px;
+	color: #000;
+	background-color: #fff;
+}
+#main #menu,
+#microsite #menu
+{
+    position: relative;
+    margin-top: -103px;
+}
+#main #quote h1
+{
+    padding-top: 26px;
+    line-height: 120%;
+}
+#main #content
+{
+	padding-bottom: 0;
+}
+#main #select .content #microsite
+{
+    font-size: 38px;
+}

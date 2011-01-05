@@ -1,0 +1,125 @@
+INSTALL INSTRUCTIONS
+====================
+  0. INSTALL THE MODULE
+     *Put multisite_manager directory in your modules directory--most likely
+     you will just put it in the master site's modules directory.
+
+     *For those running versions less than Drupal 5.7
+     ----------------------------------------
+     If you will be configuring multisite_manager to create new
+     databases (rather than just alter table prefixes) you will need to
+     update your core drupal files with the latest patch in this bug
+     report: 
+     http://drupal.org/node/168315
+
+  Assuming you will make all new sites available at /site/{shortname}/
+  1. PUT SOMETHING LIKE THIS IN YOUR APACHE CONFIG:
+  <VirtualHost *:80>
+    AliasMatch ^/site/\w+/(.*) /var/www/drupal/$1
+    DocumentRoot /var/www/drupal/
+  </VirtualHost>
+  WARNING:CLEAN URLS demand a much more complicated setup with a bunch of rewrite rules.
+          See the Appendix in this file for details
+  
+  2. Install the module in your main drupal site.  
+     In the Admin/Site configuration/Multisite Manager settings.
+
+     Set the Table prefix, Database name and Link defaults to how you
+      intend to run your multisite setup.
+     Save the configuration.
+
+     Click on the 'settings.php help' tab.  This will give you some
+     suggested code to include in your generalized settings.php file.
+   
+
+  3. Multisite manager does NOT create a settings.php file
+     for each site.  Instead, we make a single settings.php file, which
+     will work for all of them.  That means it should be added to
+
+     PUT THE SUGGESTED CODE IN YOUR ./sites/default/settings.php
+     or better at ./sites/www.example.com.site/settings.php
+
+     If you're a PHP hacker, feel free to poke at it and make it work
+     how you want it to.  The general idea, is that based on the URL
+     request, we decide which database/prefix, etc to use.
+     ----CODE BEGIN-----
+     $requri = explode('/', request_uri());
+     if (sizeof($requri) >1 && $requri[1]=='site' && $requri[2] != '') {
+       $my_site_base = $requri[2];  
+       #this will be the database shared between the main site and the shared sites
+       $db_url = 'mysql://username:password@localhost/database';
+       $db_prefix = $my_site_base."_";
+       $base_url = "http://www.example.com/site/$my_site_base";  // NO trailing slash!
+     }
+     ----CODE END-------
+
+  4. Any modules required for profile selections must be installed on
+  BOTH the main site's modules directory AND the subsidiary site module 
+  directory (a symlink will do just fine);
+  the former in order to install, the latter in order to run.
+
+  The easiest way to achieve this is to put those modules in the sites/all/modules/ directory.
+
+APPENDIX: 
+=========
+How to get CLEAN URLS working with apache and multisite setup:
+   It's gross!  I told you so!!!!!
+
+<VirtualHost *:80>
+  DocumentRoot /usr/local/share/sandboxes/common/drupal/drupal/
+  # Welcome to the Ugliest Rewrite Rules Evar(tm)!
+  # Here's the jist:
+  # 1. AliasMatch will set the file context without passing a different URL to Drupal
+  #    Therefore index.php must be matched outside of Rewrite rules
+  # 2. Rewrite is used ONLY to forward URLs of the form /xxx -> index.php?q=/xxx
+  #
+  # If we took Rewrite rules outside of the Location contexts so its in per-server
+  # processing, we might be able to simplify this.  We would need option 'PT' for
+  # passthrough and then some AliasMatch record AFTER the rewrite rules.
+
+  # If you figure it out, then go for it.  Otherwise, what ain't broken...
+  AliasMatch ^/site/\w+/(\w+).php /var/www/drupal/$1.php
+  AliasMatch ^/site/\w+/(modules|misc|files|themes|sites)/(.*)$ /var/www/drupal/$1/$2
+
+  <Location />
+    RewriteEngine on 
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^var/www/drupal(.*)$ index.php?q=$1 [L,QSA]
+  </Location>
+ <Location /site>
+    RewriteEngine on 
+    RewriteCond %{REQUEST_URI} ^/site/
+    RewriteCond %{REQUEST_URI} !index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^/var/www/drupal/site/(\w+)(/)?(.*)$ http://www.example.com/site/$1/index.php?q=$3 [L,QSA]
+  </Location>
+ 
+</VirtualHost>
+
+ALTERNATE for HTACCESS File
+=========
+This is an in-development configuration that works through only rewrites in a 
+local .htaccess file
+1. create a symlink called 'site' to drupal's home directory, like this:
+   % cd /var/www/drupal
+   % ln -s . site
+2. Add the following to the top of the .htaccess file in the drupal directory
+RewriteEngine on 
+
+#file access
+RewriteRule ^\w+/(modules|misc|files|themes|sites)(.*)$ ./$1$2 [L]
+
+RewriteRule ^/(modules|misc|files|themes|sites)(.*)$ ./$1$2 [L]
+
+#special php scripts
+RewriteRule ^\w+/(update.php|install.php|index.php)(.*)$ ./$1$2 [L,QSA]
+
+#site sub-section
+RewriteCond %{REQUEST_FILENAME} ^/var/www/drupal/site/.*
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^\w+(/)?(.*)$ index.php?q=$2 [L,QSA]
+
+#### clean url stuff should be further down in default file

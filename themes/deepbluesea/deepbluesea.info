@@ -1,0 +1,44 @@
+; $Id$
+
+; Mike Richardson - mike@begrand.net
+; Tuesday August 31, 2010
+
+name = Support for Me - Deep Blue Sea
+core = 6.x
+engine = phptemplate
+
+; Define regions
+
+regions[primarylinks] = Primary links
+regions[coverflow] = Coverflow
+regions[laheader] = LA header
+regions[lainfo] = LA header info
+regions[quicksearch] = Quick search
+regions[content] = Content
+regions[center] = Center
+regions[left] = Left sidebar
+regions[right] = Right sidebar
+regions[header] = Header
+regions[siteselector] = Microsite selector
+regions[footerlinks] = Footer links
+regions[footerpowered] = Footer powered by
+regions[footericons] = Footer icons
+regions[versioninfo] = Footer version info
+
+; Define features
+
+features[] = logo
+features[] = name
+
+; Define styles
+
+stylesheets[all][] = reset.css
+stylesheets[all][] = main.css
+; stylesheets[all][] = microsite.css
+;stylesheets[all][] = minisite.css
+
+
+; Define scripts
+
+; scripts[]= scripts/microsite.js
+; scripts[]= scripts/jquery/plugins/panelgallery/jquery.panelgallery-1_2.js

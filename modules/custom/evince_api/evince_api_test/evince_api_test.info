@@ -1,0 +1,12 @@
+; $Id: evince_api_test.info $
+name = evince API test
+description = A simple form page to test the evince API module.
+package = Other
+core = 6.x
+dependencies[] = evince_api
+
+; 
+version = "6.x-1.0"
+core = "6.x"
+project = "evince_api"
+datestamp = "1280226300"

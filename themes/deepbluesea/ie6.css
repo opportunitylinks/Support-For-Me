@@ -1,0 +1,40 @@
+#microsite #filler
+{
+	display: none;
+}
+#main #menu li.selected a,
+#main #menu li.selected a:visited,
+#main #menu li.selected a:active,
+#main #menu li.selected a:hover
+{
+    margin-top: -9px;
+}
+#main #quote
+{
+    display: none;
+}
+#main #page .wrapper
+{
+	margin-top: -122px;
+}
+#main #slideshow .info
+{
+    background: #000;
+    filter: alpha(opacity=80);
+}
+#main #slideshow h3
+{
+	margin-left: 75px;
+}
+#main #coverflow .loadIndicator
+{
+    margin-top: -60px;
+}
+#main #coverflow .arrow.right
+{
+    right: 28px;
+}
+#main #select .content .logo
+{
+	margin-left: 16px;
+}

@@ -1,0 +1,890 @@
+<?php
+// $Id: multisite_manager.module,v 1.8.4.2 2008/03/12 19:10:34 schuyler1d Exp $
+
+/**
+ * author: Schuyler Duveen
+ * sponsor: Columbia Univeristy Center for New Media Teaching & Learning
+ * URL: http://drupal.org/project/multisite_manager
+ * License: GPL v2 or any later version
+ * 
+ * TODO
+ * ----
+ * test postgres
+ * actual 'management' options?
+ * update.php support
+ * document settings.php setup
+ * configuration to run as different DB user when creating DB and granting privileges
+ * hook_before_site_install($node);
+ * hook_after_site_install($node);
+ */
+
+/**
+ * Implementation of hook_help()
+ */
+function multisite_manager_help($section) {
+  switch ($section) {
+    case 'admin/help#multisite_manager':
+      return t('Multisite Manager helps create new drupal sites from within a main drupal site.  For documentation see <a href="http://drupal.org/project/multisite_manager">http://drupal.org/project/multisite_manager</a>.<p>This module is <b>NOT Plug-n-Play</b>. Before this module will work as desired follow these steps:<ol><li>Configure the Multisite Manager defaults for where new sites will be added to the database.</li><li>Make a special settings.php file in the /sites/ drupal directory. (This '. l( 'tool','admin/settings/multisite_manager/phpsettingfile') . ' will help)</li><li>Change your Apache config, probably in your Drupal .htaccess file.</li><li>For the default setup you need a symlink in your main Drupal directory.  After changing to that directory, run <code>$ ln -s . site</code></li><li>Lastly, the DB account that runs the main site must have extra DB permissions to create databases and grant privileges</li></ol></p>');
+    case 'admin/settings/multisite_manager':
+      return t('These defaults will need corresponding changes in settings.php.  Consult help for other required changes on the file system.');
+      
+  }
+}
+
+
+function multisite_manager_node_info() {
+  return array(
+    'drupal_site' => array(
+      'name' => t('Drupal Site'),
+      'module' => 'multisite_manager',
+      'description' => t("Enables creation of drupal sites stored in the same database with a different prefix over the web without database info."),
+    )
+  );
+}
+
+/**
+ * Implementation of hook_cron()
+ */
+function multisite_manager_cron() {
+  global $db_prefix, $conf;
+
+  // check if we should run sub-sites' cron jobs
+  if (!variable_get('multisite_manager_run_cron', 0)) {
+    return;
+  } // end if not run cron
+
+  // find all drupal sites
+  $res = db_query('SELECT `nid` FROM {node} WHERE `type` = "%s"', 'drupal_site');
+  while ($node = db_fetch_object($res)) {
+    $node = node_load($node->nid);
+    
+    // if don't run this site's cron jobs
+    if (!$node->run_cron) {
+      watchdog('cron', 'Skipping cron for %title.', array('%title' => $node->title));
+    }
+    // if run this site's cron jobs
+    else {
+      $node = _multisite_manager_node_url($node);
+      $node_cron_url = $node->url . '/cron.php';
+      /* Currently, accessing cron.php has no access restrictions,
+       * (presumably, because the worst it could do is make something happen that should happen!)
+       * therefore, we can do this via the cron.php url.
+       * 
+       * Doing so by switching DBs and through drupal_cron_run() runs into considerable issues
+       * mostly with how module_invoke_all() and module_implements() cannot be localized.
+       * These two methods query in-memory modules, which for our cases runs into issues when
+       * different modules are installed in the master site vs. the sub-sites.
+       * 
+       * In theory, if these calls were tied to a master drupal state method, then this and other methods
+       * like update, etc might be possible.
+       */
+
+      watchdog('cron', 'Running cron for %title at "%url".', array('%title' => $node->title, '%url' => $node_cron_url));
+      $result = drupal_http_request($node_cron_url);
+
+      if ($result->error) {
+	$message = t('Error running cron for %title due to %error when accessing %url.', 
+		     array('%title' => $node->title, 
+			   '%error' => $result->code .' '. $result->error,
+			   '%url' => $node_cron_url,
+			   ));
+	drupal_set_message($message,'error');
+        watchdog('cron',$message, array(), WATCHDOG_WARNING);
+      } // end if error
+    }
+  } // end while nodes
+} // end function multisite_manager_cron()
+
+/**
+ * Implementation of hook_view().
+ */
+function multisite_manager_view($node, $teaser = FALSE, $page = FALSE) {
+  global $base_url;
+  $node = node_prepare($node, $teaser);
+  if ($node->installed) {
+    if ($node->link) {
+      $node = _multisite_manager_node_url($node);
+      
+      //header('Location: '. $url);
+      $node->content['link'] = array(
+       '#value' => theme('multisite_manager_sitelink', $node),
+       '#weight' => 1,
+       );
+    }
+  } else {
+    $node->content['installed'] = array(
+      '#value' => t("This Drupal site will be created on the next batch creation."),
+      '#weight' => 1,
+    );
+  }
+  return $node;
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function multisite_manager_menu() {
+  $items = array();
+  $items['admin/settings/multisite_manager'] = array(
+    'title' => t('Multisite Manager settings'),
+    'description' => t('Configure the database and url defaults for new sites.'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('multisite_manager_admin_settings'),
+    'access arguments' => array('administer multisite defaults'),
+    'file' => 'multisite_manager.admin.inc',
+    );
+  $items['admin/settings/multisite_manager/defaults'] = array(
+    'title' => t('Defaults'),
+    'description' => t('Configure the database and url defaults for new sites.'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('multisite_manager_admin_settings'),
+    'access arguments' => array('administer multisite defaults'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'file' => 'multisite_manager.admin.inc',
+    );
+  $items['admin/settings/multisite_manager/phpsettingfile'] = array(
+    'title' => t('settings.php help'),
+    'type' => MENU_LOCAL_TASK,
+    'description' => t('What to put in the settings.php file'),
+    'page callback' => 'multisite_manager_admin_file_settingsdotphp',
+    'access arguments' => array('administer multisite defaults'),
+    'file' => 'multisite_manager.admin.inc',
+    );
+  return $items;
+}
+
+/**
+ * Implementation of hook_access().
+ */
+function multisite_manager_access($op, $node) {
+  global $user;
+
+  if ($op == 'create') {
+    // Only users with permission to do so may create this node type.
+    return user_access('create drupal site');
+  }
+  // Users who create a node may edit or delete it later, assuming they have the  // necessary permissions.
+  if ($op == 'update' || $op == 'delete') {
+    if (user_access('delete own drupal site') && ($user->uid == $node->uid)) {
+      return TRUE;
+    }
+  }
+  
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function multisite_manager_perm() {
+  return array('create drupal site', 
+	       'delete own drupal site',
+	       'advanced database setup',
+	       'administer multisite defaults',
+	       );
+}
+
+function _multisite_manager_defaults() {
+  /*
+  global $db_url, $db_prefix;
+  $url = parse_url(is_array($db_url) ? $db_url['default'] : $db_url);
+  $db_user = urldecode($url['user']);
+  $db_pass = urldecode($url['pass']);
+  $db_path = ltrim(urldecode($url['path']), '/');
+  */
+  return array('profile' => variable_get('multisite_manager_profile_default', 'default'),
+	       'db_prefix' => variable_get('multisite_manager_dbprefix_default', '{shortname}_'),
+	       'db_user' => '',
+	       'db_pass' => '',
+	       'db_path' => variable_get('multisite_manager_dbpath_default', ''),
+	       'link' => variable_get('multisite_manager_link_default', ''),
+	       'run_cron' => variable_get('multisite_manager_run_cron', 0),
+	       );
+}
+
+function _multisite_manager_profile_options() {
+  $profiles = file_scan_directory('./profiles', '\.profile$', array('.', '..', 'CVS'), 0, TRUE, 'name', 0);
+  $profile_options = array();
+  foreach ($profiles as $profile) {
+    require_once $profile->filename;
+    $function = $profile->name.'_profile_details';
+    $details = $function();
+    $profile_options[$profile->name] = $details['name'].': '.$details['description'];
+  }
+  return $profile_options;
+}
+
+/**
+ * Implementation of hook_form().
+ */
+function multisite_manager_form(&$node) {
+  include_once './includes/install.inc';
+
+  $type = node_get_types('type', $node);
+
+  $defaults = _multisite_manager_defaults();
+
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => check_plain($type->title_label),
+    '#required' => TRUE,
+    '#default_value' => $node->title,
+    '#weight' => -5
+  );
+  $form['run_cron'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Run Drupal Sites\' Cron'),
+    '#required' => FALSE,
+    '#default_value' => isset($node->run_cron)?$node->run_cron:$defaults['run_cron'],
+    '#description' => t('This sets whether this drupal site\'s cron jobs will be run when the master site\'s cron is run and is configured to trigger sites.  By default, it is set ON only if the master is configured to trigger sites.'),
+    );
+  $form['shortname'] = array(
+    '#required' => TRUE,
+    '#type' => 'textfield',
+    '#title' => t('Shortname'),
+    '#default_value' => $node->shortname,
+    '#size' => 15,
+    '#maxlength' => 45,
+    '#description' => t('This short name will be used in the database as a unique identifier and also possibly the default site location.  This must only be numbers and letters'),
+    '#weight' => -4
+  );
+  
+  $form['profile'] = array(
+    '#type' => 'radios',
+    '#title' => t('Profile'),
+    '#required' => TRUE,
+    '#options' => _multisite_manager_profile_options(),//array_combine($profiles,$profiles),
+    '#default_value' => $defaults['profile'],
+    '#weight' => -2
+  );
+
+  $form['advanced'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Advanced'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#access' =>user_access('advanced database setup'),
+    '#description' => t('Once created, modifying these values will not do anything except change the local record.  If you need to move the database around, you must do it yourself through the database.  Then update the record here.'),
+  );
+   $form['advanced']['link'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Site Link'),
+    '#default_value' => isset($node->link)?$node->link:$defaults['link'],
+    '#required' => FALSE,
+    '#access' =>user_access('advanced database setup'),
+    );
+   $form['advanced']['db_prefix'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Table prefix'),
+    '#default_value' => isset($node->db_prefix)?$node->db_prefix:$defaults['db_prefix'],
+    '#required' => FALSE,
+    '#access' =>user_access('advanced database setup'),
+    );
+   $form['advanced']['db_user'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Database username'),
+    '#default_value' => isset($node->db_user)?$node->db_user:$defaults['db_user'],
+    '#required' => FALSE,
+    '#access' =>user_access('advanced database setup'),
+    '#description' => t('Do NOT set this unless your current database account has GRANT option in MySQL or CREATEUSER in Postgres.'),
+    );
+   $form['advanced']['db_pass'] = array(
+    '#type' => 'password',
+    '#title' => t('Database password'),
+    '#default_value' => $defaults['db_pass'],
+    '#required' => FALSE,
+    '#access' =>user_access('advanced database setup'),
+    );
+   $form['advanced']['db_path'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Database name'),
+    '#size' => 45,
+    '#maxlength' => 45,
+    '#default_value' => isset($node->db_path)?$node->db_path:$defaults['db_path'],
+    '#required' => FALSE,
+    '#access' =>user_access('advanced database setup'),
+    '#description' => t('Do NOT set this unless your current database account has CREATE option in MySQL or CREATEDB in Postgres.  To ensure database data is not overwritten, if you install in another database, it is either required that your current database have some db_prefix OR that it will be a new database--i.e. that your entry here includes "{shortname}".  (An error will result otherwise)'),
+    );
+   // yes, use {pound}access
+   //is there a better way so only people with access can set these items?
+   /*
+   if (!user_access('advanced database setup')) {
+     $form['advanced']['db_prefix']['#value'] = $defaults['db_prefix'];
+     $form['advanced']['db_user']['#value'] = $defaults['db_user'];
+     $form['advanced']['db_pass']['#value'] = $defaults['db_pass'];
+     $form['advanced']['db_path']['#value'] = $defaults['db_path'];
+     $form['advanced']['link']['#value'] = $defaults['link'];
+
+     $form['advanced']['db_prefix']['#type'] = 'hidden';
+     $form['advanced']['db_user']['#type'] = 'hidden';
+     $form['advanced']['db_pass']['#type'] = 'hidden';
+     $form['advanced']['db_path']['#type'] = 'hidden';
+     $form['advanced']['link']['#type'] = 'hidden';
+   }
+   */
+
+  return $form;
+}
+
+/**
+ * Implementation of hook_validate().
+ */
+function multisite_manager_validate(&$node) {
+  global $locale, $multisite_manager_installmodules;
+  include_once './includes/install.inc';
+
+  if (!preg_match('/^[A-Za-z0-9_]+$/', $node->shortname)) {
+    form_set_error('shortname', t('The database table prefix you have entered, %shortname, is invalid. The table prefix can only contain alphanumeric characters, underscores or dots.', array('%shortname' => $node->shortname)), 'error');
+  }
+  if (!$node->nid) {//expected to be NULL if a new node
+    ///if new drupal site, we check to see if the site is already entered
+    ///we don't do this on updates, because maybe the DB admin moved the site manually and is just updating the record
+
+    $already_exists = db_result(@db_query("SELECT shortname FROM {drupal_site} WHERE shortname = '%s'",$node->shortname));
+    if ($already_exists) {
+      form_set_error('shortname', t('The shortname you have entered, %shortname, is already taken. Please use a different one.', array('%shortname' => $node->shortname)), 'error');
+    }
+    if (_multisite_manager_dbexists($node)) {
+      form_set_error('shortname', t('The database location the site would be installed already exists. Please use a different shortname or database path and prefix.'), 'error');
+    }
+  }
+
+  $multisite_manager_installmodules = drupal_verify_profile($node->profile, $locale);
+  if (!$multisite_manager_installmodules) {
+    form_set_error('profile', t('One or more required modules are missing!'), 'error');
+  }
+
+  if (!user_access('advanced database setup')) {
+    /* With #access working in hook_form this should never be called */
+    $defaults = _multisite_manager_defaults();
+    if ($node->db_prefix != $defaults['db_prefix']
+	|| $node->db_user != $defaults['db_user']
+	|| $node->db_pass != $defaults['db_pass']
+	|| $node->db_path != $defaults['db_path']
+	|| $node->link != $defaults['link']
+	) {
+    form_set_error('shortname', t('Just use shortname.  You do not have access to modify the database settings directly.  If this is necessary, please contact your drupal site administrator.'), 'error');
+    }
+  }
+}
+
+function install_no_profile_error() {
+  //this function is required by drupal_verify_profile()
+  //It should probably do something smarter here.
+  echo t("Error installing profile!!!!!!");
+}
+
+function _multisite_manager_unparse_dburl($db) {
+  //no such thing as query strings or fragments in db urls, right?
+  $db_url = $db['scheme'].'://';
+  if ($db['user']) {
+    $db_url .= $db['user'];
+    if ($db['pass']) {
+      $db_url .= ':'.$db['pass'];
+    }
+    $db_url .= '@';
+  }
+  $db_url .= $db['host'];
+  if ($db['port']) {
+    $db_url .= ':'.$db['port'];
+  }
+  $db_url .= '/'.$db['path'];
+  //ignoring any querystring or fragment
+  return $db_url;
+}
+
+/*
+ * Returns an associative array for the $node that
+ * _multisite_manager_unparse_dburl() can turn into a database url
+ * or be passed to _multisite_manager_dbswitch()
+ */ 
+function _multisite_manager_dbobj($node) {
+  global $db_url;
+  $cur_db = parse_url(is_array($db_url) ? $db_url['default'] : $db_url);
+
+  if (strpos($cur_db['path'],'/')===0) {
+    $cur_db['path'] = substr($cur_db['path'],1);
+  }
+
+  $new_db = $cur_db; //copying array, not reference
+
+  //used for set_active array
+  $new_db['name'] = 'multisite_manager_newdb';
+  $new_db['prefix'] = str_replace('{shortname}', $node->shortname, $node->db_prefix);
+
+  if ($node->db_user) {
+    $new_db['user'] = str_replace('{shortname}', $node->shortname, $node->db_user);
+  }
+  if ($node->db_pass) {
+    $new_db['pass'] = $node->db_pass;
+  }
+
+  if ($node->db_path && $node->db_path != $cur_db['path']) {
+    //DIFFERENT DATABASE
+    $new_db['path'] = str_replace('{shortname}', $node->shortname, $node->db_path);
+    $new_db['new'] = TRUE;
+  }
+  else {
+    $new_db['new'] = FALSE;
+  }
+
+  $new_db['url'] = _multisite_manager_unparse_dburl($new_db);
+  return $new_db;
+}
+
+/* switch the db, but NOT the prefix!!!
+ *
+ */
+
+function _multisite_manager_dbswitch($new_db) {
+  global $db_url, $db_prefix;
+
+  $cur_db = array('name' => 'default', //just a guess
+		  'url' => $db_url,
+		  'prefix' => $db_prefix,
+		  );
+
+  /* SWITCH TO NEW DB */
+  if ($db_url != $new_db['url']) {
+    if (!is_array($db_url)) {
+      //this is hacking any just-a-string db_url into an array
+      $db_url = array('default' => $db_url);
+    }
+    else {
+      $cur_db['url'] = $db_url['default'];
+    }
+
+    $db_url[$new_db['name']] = $new_db['url'];
+
+    //actually switch database. db_set_active() defined in includes/database.inc
+    $cur_db['name'] = db_set_active($new_db['name']);
+  }
+  ///We no longer switch the prefix, because we rename the tables after the db is created
+  ///any context that needs to switch the prefix should do so, itself, and when timely
+  //$db_prefix = $new_db['prefix'];
+
+  return $cur_db;
+}
+
+/*
+ * Until this is in the db_* api..., return the error text from the last database query
+ */
+function _multisite_manager_db_error_message() {
+
+  switch ($GLOBALS['db_type']) {
+    case 'mysql': 
+      return mysql_error();
+    case 'mysqli': 
+      global $active_db;
+      return mysqli_error($active_db);
+    case 'pgsql': 
+      return pg_last_error();
+  }
+}
+
+/*
+ * Returns true if the database exists where $node is directed
+ */
+function _multisite_manager_dbexists($node) {
+  global $db_prefix;
+  $new_db = _multisite_manager_dbobj($node);
+  $already_exists = FALSE;
+  switch ($GLOBALS['db_type']) {
+    case 'mysql': 
+    case 'mysqli':
+      $already_exists = db_result(@db_query("SHOW DATABASES LIKE '%s'", $new_db['path']));
+      if ($already_exists) {
+	$already_exists = db_result(@db_query("SHOW TABLES FROM %s LIKE '%s%%'", $new_db['path'], str_replace('_','\_',$new_db['prefix'])));
+	if (!$already_exists && $db_prefix != $new_db['prefix']) {
+	  ///to avoid watchdog set_active_db() problems we install on the current prefix and then rename tables to the new one
+	  ///this needs to be doable, so we can't have tables hanging around that match the current prefix either
+	  ///even (or especially!!!) if db_prefix == ''
+	  $already_exists = db_result(@db_query("SHOW TABLES FROM %s LIKE '%s%%'", $new_db['path'], str_replace('_','\_',$new_db['prefix'])));
+	}
+      }
+      break;
+    case 'pgsql':
+      ///Since we can't query tables in other DBs in postgres, we have to be a little more picky
+      ///If the database is used by something else, but the prefix is safe, it's still a problem
+      if (strpos($node->db_path,'{shortname}') !== FALSE) {
+	$already_exists = db_result(@db_query("SELECT datname FROM pg_database WHERE datname = '%s'",$new_db['path']));
+      }
+      elseif (!$new_db['new']) {
+	$already_exists = db_result(db_query("SELECT relname FROM pg_stat_user_tables WHERE relname LIKE '%s%%'", str_replace('_','\_',$new_db['prefix'])));
+      }
+      break;
+  }
+  return $already_exists;
+}
+
+/*
+ * Creates a new database with permissions to the user if necessary.
+ * (as deemed necessary by $new_db['new'] )
+ */
+function _multisite_manager_newdb($new_db) {
+  if ($new_db['new']) {
+    //DIFFERENT DATABASE
+    ///create database
+    ///if it already exists, then some error will return, but who cares?
+    ///Actually, we DO care, because if it creates a new db here, we'll
+    ///  delete it on node deletion
+    ///in MYSQL you need the 'CREATE' privilege.  
+    ///in POSTGRES you need the 'CREATEDB' privilege
+    #$create_req = 'CREATE DATABASE ';
+    #if (strpos($GLOBALS['db_type'], 'mysql') !== FALSE) {
+      #$create_req .= 'IF NOT EXISTS ';
+    #}
+    @db_query('CREATE DATABASE %s', $new_db['path']);
+    $errors = db_error();
+
+    if ($errors === 1007) {
+      ///This is ok, maybe we put all the new databases in one other db
+      drupal_set_message("Database already existed");
+    } 
+    elseif ($errors) {
+      //what's 1004: access denied!
+      //needs GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX,                 ALTER, CREATE TEMPORARY TABLES, LOCK TABLES  on *.* to 'drupaluser'@'localhost' identified by '*****' with grant option;
+      drupal_set_message("Database error when creating database: $errors", 'error');
+      return FALSE;
+    }
+  }
+  /**
+   * I was tempted to change user only if there's a new database
+   * but clearly this account may have too many rights for a
+   * sub-site, so there is a use case where db_user would change
+   * without the db changing.
+   */
+
+  switch ($GLOBALS['db_type']) {
+    case 'mysql': 
+    case 'mysqli': 
+      //do if new user AND new db
+      if ($new_db['user'] != $cur_db['user'] && $new_db['new']) {
+	//current user needs GRANT OPTION privilege
+        @db_query("
+          GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, 
+                ALTER, CREATE TEMPORARY TABLES, LOCK TABLES
+                ON %s.*
+                TO '%s'@'%s' IDENTIFIED BY '%s'
+          ", $new_db['path'], $new_db['user'], $new_db['host'], $new_db['pass']);
+      }
+      break;
+    case 'pgsql': 
+      if ($new_db['user'] != $cur_db['user']) {//only if diff user
+	//current user needs CREATEUSER privilege
+        @db_query("
+          CREATE USER %s ".
+	  ($new_db['pass'])?" WITH PASSWORD '%s'":"%s".
+        " NOCREATEDB 
+          NOCREATEUSER 
+        ", $new_db['user'], $new_db['pass']);
+      }
+      break;
+  }
+  $errors = db_error();
+  if ($errors) {
+    drupal_set_message(str_replace($new_db['pass'], '******', _multisite_manager_db_error_message()),'error');
+  }
+}
+
+/**
+ * Implementation of hook_insert().
+ */
+function multisite_manager_insert($node) {
+
+  $install_immediately = variable_get('multisite_manager_install_immediate', TRUE);
+  //Store some info about the new site in the main site.
+  //Note that we DO NOT store the password
+  db_query("INSERT INTO {drupal_site} (vid, nid, shortname,  profile, link, installed, run_cron, db_prefix, db_user, db_path) VALUES (%d, %d, '%s', '%s', '%s', %d, %d, '%s', '%s', '%s')", $node->vid, $node->nid, $node->shortname, $node->profile, $node->link, $install_immediately, $node->run_cron, $node->db_prefix, $node->db_user, $node->db_path);
+  
+  if ($install_immediately) {
+    multisite_manager_install_site($node);
+  }
+  
+}
+
+function multisite_manager_install_site($node) {
+  /**
+   * 
+   *  1. If it's a different database and/or user from the current
+   *     then creates them (assumes db access to do so)
+   *  2. switches to the new context (db,user,table prefix)
+   *  3. installs drupal profile in new place
+   *  4. switches back to current context
+   */
+  global $multisite_manager_installmodules, $db_prefix, $conf, $locale, $user;
+
+  if (!$multisite_manager_installmodules) {  
+    ///if this function is run by a script, then _validate() won't have
+    /// been called
+    $multisite_manager_installmodules = drupal_verify_profile($node->profile, $locale);
+    if (!$multisite_manager_installmodules) { 
+      echo "\n" . t("One or more required modules are missing!") . "\n";
+      exit();
+    }
+  }
+
+  ///get user for admin account
+  $admin_how = variable_get('multisite_manager_admin_account', 'copy creator');
+  switch($admin_how) {
+  case 'copy admin':
+    $account = user_load(1);
+    break;
+  case 'copy creator':
+    $account = $user;
+  }
+
+  #$multisite_manager_installmodules = drupal_verify_profile($node->profile, $locale);
+  include_once './includes/install.inc';
+  //
+
+  /**
+   * creates database and user w/ permissions if necessary
+   * _newdb returns the db_url for the new site based on 
+   * the $node's arguments.
+   *
+   * The simplest case would be returning the same url as
+   * the current one
+   */
+
+  $new_db =_multisite_manager_dbobj($node);
+  _multisite_manager_newdb($new_db);
+
+  /* SWITCH TO NEW DB */
+  ///prefix is not changed here
+  $cur_db = _multisite_manager_dbswitch($new_db);
+  if (!$new_db['new']) {
+    ///Only change the prefix if we're in the same database
+    ///Otherwise, we will rename the tables AFTER creation.
+    ///This stops watchdog() from switching back and not finding tables with the right prefix mid-installation
+    $db_prefix = $new_db['prefix'];
+  }
+  /* DB QUERIES NOW ON NEW SITE DB */
+
+  ///Store current $conf (all variable_get/set()'s)
+  $cur_conf = $conf; //should be an array copy here
+  $conf = array();
+
+  ///THEFT (install.php)
+  drupal_install_system();
+  #variable_set('install_profile_modules', array_diff($multisite_manager_installmodules, array('system')));
+
+  #install_tasks($node->profile, $task); //can't use this
+
+  ///THEFT (install.php)
+  drupal_install_modules($multisite_manager_installmodules);
+
+  /*BEGIN THEFT*/
+  //TODO: install locale stuff
+  /*END THEFT (install.php) */
+
+  ///TASK 'configure' (admin account)
+  if ($admin_how !== 'do nothing') {
+    ///THEFT (install.php)
+    $newsite_account = user_load(1);
+    user_save($newsite_account, array('name' => $account->name,
+				      'mail' => $account->mail,
+				      'roles' => array(), 
+				      'status' => 1,
+				      ) );
+    //no save password raw function :-(
+    $success = db_query("UPDATE {users} SET pass = '%s' WHERE uid = 1", array($account->pass));
+  }
+
+
+  //after install_profile, because otherwise {cache} and {variable} don't exist yet
+  variable_init(); //soak up anything from {variable}
+
+  /*BEGIN THEFT*/
+  //TODO: call profile tasks
+
+  // Show profile finalization info. 
+  $function = $node->profile.'_profile_tasks';
+  if (function_exists($function)) {
+    // More steps required
+    //PARANOIA: buggy set_active_db() makes us set this again, just for fun
+  /*END THEFT*/
+
+    $mid_cur_db = _multisite_manager_dbswitch($new_db);
+    //BUG: $url here will probably mess things up if it's actually used
+    $task = 'profile'; ///is passed by reference. we should foreach the tasks
+    $profile_message = $function($task, _multisite_manager_node_url($node));
+  }
+
+  //PARANOIA: buggy set_active_db() makes us set this again, just for fun
+  $mid_cur_db = _multisite_manager_dbswitch($new_db);
+
+  ///TASK 'done'
+  /*BEGIN THEFT (install.php)*/
+  /* code ripped from install.php:install_tasks  */
+
+  // Rebuild menu to get content type links registered by the profile,
+  // and possibly any other menu items created through the tasks.
+  menu_rebuild();
+  actions_synchronize();
+  // Store install profile for later use.
+  variable_set('install_profile', $node->profile);
+  /*END THEFT (install.php)*/
+
+  if ($new_db['new'] && $new_db['prefix'] != $db_prefix) {
+    ///OK, time to rename all the tables that were just created
+    ///Is this hacky or what!?!?!
+
+    ///PARANOIA.  We switch AGAIN to make ABSOLUTELY SURE we don't 
+    ///              go and rename the tables of the CURRENT DATABASE
+    $mid_cur_db = _multisite_manager_dbswitch($new_db);
+
+    //drupal_set_message('Renaming tables in the new database.');
+    $result = _multisite_manager_tables_result($db_prefix);
+
+    if ($cur_db['url'] != $mid_cur_db['url']) {
+      ///This is a sanity check.  We can still rename the tables, but without the RE-SWITCH, we would have clobbered our CUR_DB
+      drupal_set_message('Something has gone horribly wrong.  The database '. $mid_cur_db['url']  .' is NOT the new one.  Therefore, the database was switched mysteriously some time during installation.  Thus some features that were intended to be in your new database may have polluted your current database.','error');
+    }
+
+    ///Actually RENAME the TABLES
+    while($table = @db_fetch_array($result)) {
+      $table_name = array_pop($table);
+      @db_query("ALTER TABLE %s RENAME TO %s%s", $table_name, $new_db['prefix'], substr($table_name,strlen($cur_db['prefix'])) );
+    }
+
+    $db_prefix = $cur_db['prefix'];
+  }
+  /* SWITCH BACK TO OLD DB */
+  _multisite_manager_dbswitch($cur_db);
+
+  //remove cached versions of stuff for new site so as not to corrupt this site's page
+  module_list(TRUE, FALSE);
+  module_implements('nodeapi', FALSE, TRUE);
+  node_get_types('return_nothing', FALSE, TRUE);
+
+  /* DB QUERIES NOW ON MAIN */
+  ///Restore $conf for current context
+  $conf = $cur_conf;
+
+  if (isset($profile_message)) {
+    drupal_set_message($profile_message);
+  }
+
+}
+
+/**
+ * Implementation of hook_update().
+ */
+function multisite_manager_update($node) {
+  if (user_access('advanced database setup')) {
+    db_query("UPDATE {drupal_site} SET 
+              link = '%s', shortname = '%s', run_cron = '%d', db_prefix = '%s', db_user = '%s', db_path = '%s'
+              WHERE vid = %d", 
+	     $node->link, 
+	     $node->shortname, 
+	     $node->run_cron, 
+	     $node->db_prefix, 
+	     $node->db_user, 
+	     $node->db_path, 
+	     $node->vid);
+    if ($node->db_pass) {
+      db_query("UPDATE {drupal_site} SET db_pass = '%s' WHERE vid = %d", $node->db_pass, $node->vid);
+    }
+  }
+  else {
+    db_query("UPDATE {drupal_site} SET link = '%s', run_cron = '%s' WHERE vid = %d", $node->link, $node->run_cron, $node->vid);
+  }
+}
+
+/*
+ * returns a $result from a query of the tables for a certain db prefix
+ */
+function _multisite_manager_tables_result($prefix) {
+  $result;
+    /* Just to be safe, we escape all queries with @ so it's less likely
+     * that a warning message will try to be written to the {session} db
+     * while we're switched (and {session} in one use case is being deleted!!).
+     */
+  switch ($GLOBALS['db_type']) {
+    case 'mysql': 
+    case 'mysqli':
+      $result = @db_query("SHOW TABLES LIKE '%s%%'", str_replace('_','\_',$prefix));
+      break;
+    case 'pgsql': 
+      $result = @db_query("SELECT relname FROM pg_stat_user_tables WHERE relname LIKE '%s%%'", str_replace('_','\_',$prefix));
+      break;
+  }
+  return $result;
+}
+
+/**
+ * Implementation of hook_delete().
+ */
+function multisite_manager_delete($node) {
+  /*
+    before deleting database, make sure the list of show tables
+    if prefix isn't "" --but even then, what if the 'new' ones
+    all end up in the same database
+  */
+  /*
+    If db_path has {shortname} in it, then a database is singularly related to that
+    site, and we can just delete the whole thing.
+  */
+  if (strpos($node->db_path,'{shortname}') !== FALSE) {
+    db_query('DROP DATABASE %s',str_replace('{shortname}', $node->shortname, $node->db_path));
+  }
+  elseif (strpos($node->db_prefix,'{shortname}') !== FALSE) {
+    $new_db =_multisite_manager_dbobj($node);
+    /* SWITCH TO NEW DB */
+    if ($new_db['new']) {
+      ///note: prefix is not changed here, and doesn't have to be.
+      $cur_db = _multisite_manager_dbswitch($new_db);
+    }
+    /* DB QUERIES NOW ON NEW SITE DB */
+    $result = _multisite_manager_tables_result($new_db['prefix']);
+
+    while ($table = @db_fetch_array($result)) {
+      $table_name = array_pop($table);
+      drupal_set_message("Dropping table ".$table_name);
+      @db_query("DROP TABLE %s", $table_name);
+    }
+    /* SWITCH BACK TO OLD DB */
+    if ($new_db['new']) {
+      _multisite_manager_dbswitch($cur_db);
+    }
+    /* DB QUERIES NOW ON MAIN */
+  }
+
+  ///Finally, delete from our own records
+  db_query("DELETE FROM {drupal_site} WHERE vid = %d", $node->vid);
+}
+
+/**
+ * Implementation of hook_load().
+ */
+function multisite_manager_load($node) {
+  $additions = db_fetch_object(db_query('SELECT shortname, profile, link, installed, run_cron, db_prefix, db_user, db_path FROM {drupal_site} WHERE vid = %d', $node->vid));
+  return $additions;
+}
+
+/**
+ * Gets the node url from the link
+ * 
+ * @param object $node
+ * @return object
+ */
+function _multisite_manager_node_url($node) {
+  global $base_url;
+  if ($node->link) {
+    $node->url = str_replace('{base_url}', $base_url, $node->link);
+    $node->url = str_replace('{shortname}', $node->shortname, $node->url);
+  } // end if node link
+
+  return $node;
+} // end function _multisite_manager_node_url()
+
+
+function multisite_manager_theme() {
+  return array('multisite_manager_sitelink' => array ('arguments'=>array('node')));
+}
+
+function theme_multisite_manager_sitelink($node) {
+  return l($node->title .' '. t('Site'), $node->url);
+}
+
+// vim:fenc=utf-8:ft=php:ai:si:ts=2:sw=2:et:

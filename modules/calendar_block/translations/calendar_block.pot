@@ -1,0 +1,244 @@
+# $Id: calendar_block.pot,v 1.1.2.1 2008/11/24 20:08:02 skilip Exp $
+#
+# LANGUAGE translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  calendar_block.module,v 1.1.2.3 2008/11/19 07:54:39 skilip
+#  calendar_block.info,v 1.1.2.1 2008/11/19 07:54:39 skilip
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2008-11-24 19:58+0100\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: calendar_block.module:40;104
+msgid "Calendar"
+msgstr ""
+
+#: calendar_block.module:46
+msgid "Calendar settings"
+msgstr ""
+
+#: calendar_block.module:47
+msgid "Here you can set all options for the calendar. Please refer to our !help_section for a complete guide on the module"
+msgstr ""
+
+#: calendar_block.module:47
+msgid "help section"
+msgstr ""
+
+#: calendar_block.module:58
+msgid "First day of the week"
+msgstr ""
+
+#: calendar_block.module:60
+msgid "sunday"
+msgstr ""
+
+#: calendar_block.module:60
+msgid "monday"
+msgstr ""
+
+#: calendar_block.module:79
+msgid "Save block"
+msgstr ""
+
+#: calendar_block.module:80;95
+msgid "Reset to defaults"
+msgstr ""
+
+#: calendar_block.module:301
+msgid "The <em>calendar_block</em> module provides a fully customizable calendar block which can be placed in a region at the !blocks_link."
+msgstr ""
+
+#: calendar_block.module:301
+msgid "blocks section"
+msgstr ""
+
+#: calendar_block.module:302
+msgid "In the !block_config of the calendar block, the calendar's layout can be fully changed. You can set the colors as well as the size of the calendar so it fits to your website's design."
+msgstr ""
+
+#: calendar_block:302
+msgid "configuration form"
+msgstr ""
+
+#: calendar_block.module:303
+msgid "With this version of the calendar_block module, developers can use the hook_calendar_block() to alter the dates, as well as to set the date and the weekdays the calender has to load on a page call."
+msgstr ""
+
+#: calendar_block.module:304
+msgid "If the modules !colorpicker and !slider_textfield are installed, the layout of the calendar is dynamically changed when changing it in the block's configuration form."
+msgstr ""
+
+#: calendar_block.module:304
+msgid "Textfield to slider"
+msgstr ""
+
+#: calendar_block.module:305
+msgid "hook_calendar_block()"
+msgstr ""
+
+#: calendar_block.module:306
+msgid "Definition"
+msgstr ""
+
+#: calendar_block.module:308
+msgid "Description"
+msgstr ""
+
+#: calendar_block.module:309
+msgid "Provide other modules a hook to change the data for the calendar. Modules can create links for dates, change the weekdays, or set the month the calendar has to load on page calls."
+msgstr ""
+
+#: calendar_block.module:310
+msgid "Parameters"
+msgstr ""
+
+#: calendar_block.module:311
+msgid "The calendar object which can be altered in the hook function (<code>$op == 'load'</code>). The calendar object contains the following elements:"
+msgstr ""
+
+#: calendar_block.module:312
+msgid "The year on which the calendar is initialized (1900 - ....)."
+msgstr ""
+
+#: calendar_block.module:313
+msgid "The month on which the calendar is initialized (1 - 12)."
+msgstr ""
+
+#: calendar_block.module:314
+msgid "An array of the week as shown on top of the calendar. This can be used to change the titles of weekdays. Note that the keys in this array should not be changed!"
+msgstr ""
+
+#: calendar_block.module:315
+msgid "Both the weekdays and the month's title are translatable using the translate !translate_page. This is how the array is built:"
+msgstr ""
+
+#: calendar_block.module:315
+msgid "translate interface page"
+msgstr ""
+
+#: calendar_block.module:328
+msgid "The date object which can be altered in the hook function (<code>$op == 'alter'</code>). The date object contains the following elements:"
+msgstr ""
+
+#: calendar_block.module:329
+msgid "The day of the current date object (1 - 31)."
+msgstr ""
+
+#: calendar_block.module:330
+msgid "The month of the current date object (1 - 12)."
+msgstr ""
+
+#: calendar_block.module:331
+msgid "The year of the current date object (1900 - ....)."
+msgstr ""
+
+#: calendar_block.module:332
+msgid "A string representation of the current date (\"mm-dd-yy\")."
+msgstr ""
+
+#: calendar_block.module:333
+msgid "This is the part where it gets interesting. The content of the day presented in the calendar block can be changed here. Regularly you want to set it to a link referring to a node which has been created on this date."
+msgstr ""
+
+#: calendar_block.module:335
+msgid "What kind of action is being performed. Possible values:"
+msgstr ""
+
+#: calendar_block.module:336
+msgid "In this operation $date->content can be changed."
+msgstr ""
+
+#: calendar_block.module:337
+msgid "In this operation you can set the month on which the calendar has to be loaded."
+msgstr ""
+
+#: calendar_block.module:339
+msgid "Code"
+msgstr ""
+
+#: calendar_block.module:373
+msgid "TODO"
+msgstr ""
+
+#: calendar_block.module:374
+msgid "Caching the calendar would be a huge performance improvement"
+msgstr ""
+
+#: calendar_block.module:375
+msgid "In the configuration options of the calendar block, users should be abled to check which nodetypes should be tracked by the calendar_block module. In the publication options of node form, users should be able to uncheck the node from being tracked."
+msgstr ""
+
+#: calendar_block.module:0
+msgid "calendar_block"
+msgstr ""
+
+#: calendar_block.info:0
+msgid "Calendar Block"
+msgstr ""
+
+#: calendar_block.info:0
+msgid "Highly customizable calendar block for various purposes"
+msgstr ""
+
+#: calendar_block.info:0
+msgid "User Interface"
+msgstr ""
+
+#: calendar_block.info:0
+msgid "Januari"
+msgstr ""
+
+#: calendar_block.info:0
+msgid "February"
+msgstr ""
+
+#: calendar_block.info:0
+msgid "March"
+msgstr ""
+
+#: calendar_block.info:0
+msgid "April"
+msgstr ""
+
+#: calendar_block.info:0
+msgid "May"
+msgstr ""
+
+#: calendar_block.info:0
+msgid "June"
+msgstr ""
+
+#: calendar_block.info:0
+msgid "July"
+msgstr ""
+
+#: calendar_block.info:0
+msgid "August"
+msgstr ""
+
+#: calendar_block.info:0
+msgid "September"
+msgstr ""
+
+#: calendar_block.info:0
+msgid "October"
+msgstr ""
+
+#: calendar_block.info:0
+msgid "November"
+msgstr ""
+
+#: calendar_block.info:0
+msgid "December"
+msgstr ""

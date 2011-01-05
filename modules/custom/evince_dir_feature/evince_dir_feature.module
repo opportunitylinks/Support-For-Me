@@ -1,0 +1,3 @@
+<?php
+
+include_once('evince_dir_feature.features.inc');

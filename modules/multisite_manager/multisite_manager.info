@@ -1,0 +1,16 @@
+; $Id: multisite_manager.info,v 1.2.4.1 2008/03/12 16:47:45 schuyler1d Exp $
+name = MultiSite Manager
+description = "Allows creation of new drupal sites from a central drupal site without the creator having access to database info.  The new site is installed either with a different database prefix or in a newly created database."
+
+core = 6.x
+; Information added by drupal.org packaging script on 2008-02-08
+version = "6.x-1.0-beta"
+project = "multisite_manager"
+datestamp = "1202509207"
+
+; Information added by drupal.org packaging script on 2010-03-30
+version = "6.x-1.0"
+core = "6.x"
+project = "multisite_manager"
+datestamp = "1269959731"
+

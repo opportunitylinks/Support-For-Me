@@ -1,0 +1,151 @@
+#calendar_ajax {
+	line-height:100%;
+	width:173px;
+}
+
+#nav {
+	text-align:center;
+}
+
+#nav div {
+	float:left;
+}
+
+#calendar_prev, #calendar_next {
+  width:24px;
+  height:20px;
+  cursor:pointer;
+  padding-top:4px;
+}
+
+#calendar_month {
+  width:125px;
+	margin-top:4px;
+}
+
+.hok {
+  padding:0px;
+	width:25px;
+	height:18px;
+	float:left;
+	text-align:center;
+	font-weight:bold;
+  position:relative;
+}
+
+.hok span {
+  display:block;
+}
+
+.hok.first, .hok.last {
+	width:24px;
+}
+
+.hok.top {
+	font-size:9px;
+	height:12px;
+	line-height:100%;
+	padding:0px;
+}
+
+.hok.disabled span {
+  -moz-opacity:.50;
+  filter:alpha(opacity=50);
+  opacity:.50; 
+}
+
+#calendar_row0 .hok span {
+  margin-top:0px;
+}
+
+#calendar_row6 .hok {
+  height:17px;
+}
+
+#calendar_row0 {
+  height:37px;
+  background:url('images/header.png') repeat-x;
+}
+
+#calendar_row1 .hok {
+  background-image:url('images/cell_row1.png');
+}
+
+#calendar_row2 .hok {
+  background-image:url('images/cell_row2.png');
+}
+
+#calendar_row3 .hok {
+  background-image:url('images/cell_row3.png');
+}
+
+#calendar_row4 .hok {
+  background-image:url('images/cell_row4.png');
+}
+
+#calendar_row5 .hok {
+  background-image:url('images/cell_row5.png');
+}
+
+#calendar_row6 .hok {
+  background-image:url('images/cell_row6.png');
+}
+
+#calendar_row1 .hok.disabled {
+  background-image:url('images/cell_first_row_disabled.png');
+}
+
+#calendar_row5 .hok.disabled, #calendar_row6 .hok.disabled {
+  background-image:url('images/cell_last_row_disabled.png');
+}
+
+#calendar_row1 .hok.today,
+#calendar_row2 .hok.today,
+#calendar_row3 .hok.today,
+#calendar_row4 .hok.today,
+#calendar_row5 .hok.today,
+#calendar_row6 .hok.today {
+	background-image:url(images/today.png);
+	background-repeat:no-repeat;
+}
+
+.hok .border_right, .hok .border_bottom {
+  position:absolute;
+  background-color:black;
+  right:0px;
+  -moz-opacity:.10;
+  filter:alpha(opacity=10);
+  opacity:.10; 
+}
+
+.hok .border_right {
+  width:1px;
+  height:100%;
+  top:0px;
+}
+
+.hok .border_bottom {
+  bottom:0px;
+  width:100%;
+  height:1px;
+  overflow:hidden;
+}
+
+.calendar-link:visited {
+	text-decoration:underline;
+}
+
+.week .clear-block {
+  height:0px;
+  clear:both;
+  overflow:hidden;
+}
+
+#color_textfields_wrapper {
+  float:left;
+}
+
+#color_textfields_wrapper .form-submit {
+  float:left;
+  margin:30px 10px 0px 0px;
+}

@@ -1,0 +1,38 @@
+input#edit-search-quick-search {
+  float: left;
+}
+div#new-search {
+  clear: left;
+}
+
+div#filters {
+  position: relative;
+  width: 220px;
+  margin-right: 20px;
+}
+
+
+div#tabbed {
+  float: right;
+  width: 600px;
+  overflow: hidden;
+}
+
+ul#tablinks li {
+  float: left;
+  padding: 4px;
+  border: 1px solid #999;
+  background-image: none;
+  background: #ddd;
+}
+ul#tablinks li.active {
+  background: #fff;
+}
+div.sfmtab {
+  clear: left;
+  border: 1px solid #999;
+}
+div#numentries {
+  float: right;
+}
+

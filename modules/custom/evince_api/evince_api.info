@@ -1,0 +1,11 @@
+; $Id: evince_api.info $
+name = evince api
+description = An abstraction layer API on top of the evince webservice http://api.evince-online.com
+package = Other
+core = 6.x
+
+; 
+version = "6.x-1.0"
+core = "6.x"
+project = "evince_api"
+datestamp = "1280226300"

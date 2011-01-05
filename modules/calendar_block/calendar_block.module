@@ -1,0 +1,419 @@
+<?php
+// $Id: calendar_block.module,v 1.4.2.1 2009/01/20 08:46:24 skilip Exp $
+
+/**
+ * @file
+ * This module provides a fully customizale calendar block.
+ *
+ * You can set the actions for the dates by using hook_calendar_block(&$day, $op).
+ */
+
+/**
+ * Implementation of hook_help().
+ */
+function calendar_block_help($section) {
+  switch ($section) {
+    case 'admin/help#calendar_block':
+      return calender_block_help_page();
+  }
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function calendar_block_menu() {
+  $items['calendar_block_ajax'] = array(
+    'page callback' => 'calendar_block_ajax',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_block().
+ */
+function calendar_block_block($op = 'list', $delta = 0, $edit = array()) {
+  switch ($op) {
+    case 'list':
+      $blocks[0] = array(
+        'info' => t('Calendar'),
+      );
+      return $blocks;
+    case 'configure':
+      $form['calendar_block'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Calendar settings'),
+        '#description' => '<p>'. t('Here you can set all options for the calendar. Please refer to our !help_section for a complete guide on the module', array('!help_section' => l(t('help section'), 'admin/help/calendar_block'))) .'</p>',
+      );
+      $form['elements'] = array(
+        '#type' => 'value',
+        '#value' => array('background_color' => 'FFFFFF', 'font_color' => '494949', 'header_color' => '494949', 'link_color' => '027AC6', 'border_color' => 'a5a5a5', 'width' => 173, 'first_day_of_the_week' => 'mo')
+      );
+
+      foreach ($form['elements']['#value'] as $element => $default_value) {
+        if ($element == 'first_day_of_the_week') {
+          $form['calendar_block'][$element] = array(
+            '#type' => 'select',
+            '#title' => t('First day of the week'),
+            '#default_value' => variable_get("calendar_$element", $default_value),
+            '#options' => array('su' => t('sunday'), 'mo' => t('monday')),
+          );
+        }
+        else {
+          $form['calendar_block'][$element] = array(
+            '#type' => ($element !== 'width' && module_exists('colorpicker')) ? 'colorpicker_textfield' : (module_exists('slider_textfield') ? 'slider_textfield' : 'textfield'),
+            '#title' => t(drupal_ucfirst(str_replace('_', ' ', $element))),
+            '#default_value' => variable_get("calendar_$element", $default_value),
+            '#size' => '7',
+            '#maxlength' => '7',
+          );
+          if ($element !== 'width') {
+            $form['calendar_block'][$element]['#default_value'] = '#'. $form['calendar_block'][$element]['#default_value'];
+          }
+          else {
+            $form['calendar_block'][$element]['#slider_settings'] = array('min' => 120, 'max' => 200, 'slide' => 'Drupal.calendar.sliderSlide');
+          }
+        }
+      }
+      $form['calendar_block']['submit'] = array('#type' => 'submit', '#value' => t('Save block'));
+      $form['calendar_block']['reset'] = array('#type' => 'submit', '#value' => t('Reset to defaults'));
+
+      if (module_exists('colorpicker')) {
+        $form['calendar_block']['my_colorpicker'] = array(
+          '#type' => 'colorpicker',
+          '#attributes' => array('style' => 'float:left; margin-top:40px;'),
+        );
+        $form['calendar_block']['background_color']['#prefix'] = '<div id="color_textfields_wrapper">';
+        $form['calendar_block']['reset']['#suffix']  = '</div>';
+      }
+
+
+      return $form;
+    case 'save':
+      foreach (array_keys($edit['elements']) as $element) {
+        if ($edit['op'] == t('Reset to defaults')) {
+          variable_del("calendar_$element");
+        }
+        else {
+          variable_set("calendar_$element", str_replace('#', '', $edit[$element]));
+        }
+      }
+      break;
+    case 'view':
+      $block['subject'] = t('Calendar');
+      $block['content'] = '<div id="calendar_ajax"></div>';
+
+      if (variable_get('calendar_first_day_of_the_week', 'mo') == 'mo') {
+        $weekdays = array('mo' => 'mo', 'tu' => 'tu', 'we' => 'we', 'th' => 'th', 'fr' => 'fr', 'sa' => 'sa', 'su' => 'su');
+      }
+      else {
+        $weekdays = array('su' => 'su', 'mo' => 'mo', 'tu' => 'tu', 'we' => 'we', 'th' => 'th', 'fr' => 'fr', 'sa' => 'sa');
+      }
+
+      $calendar = (object) array(
+        'year' => date('Y'),
+        'month' => date('m'),
+        'weekdays' => $weekdays,
+      );
+      $date = (object) array();
+      // Give other modules the opportunity set the date for the calendar
+      foreach (module_implements('calendar_block') as $module) {
+        $function = $module .'_calendar_block';
+        $function($calendar, $date, 'load');
+      }
+
+      $path = drupal_get_path('module', 'calendar_block');
+      drupal_add_css("$path/calendar_block.css", 'module');
+      drupal_add_js("$path/calendar_block.js");
+      drupal_add_js(array('calendar_block' => array(
+        'calendar' => $calendar,
+        'ajax_response_path' => url('calendar_block_ajax'),
+        'background_color' => '#'. variable_get('calendar_background_color', 'FFFFFF'),
+        'font_color' => '#'. variable_get('calendar_font_color', '494949'),
+        'header_color' => '#'. variable_get('calendar_header_color', '494949'),
+        'link_color' => '#'. variable_get('calendar_link_color', '027AC6'),
+        'border_color' => '#'. variable_get('calendar_border_color', 'a5a5a5'),
+        'width' => variable_get('calendar_width', 173),
+      )), 'setting');
+      return $block;
+  }
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function calendar_block_theme() {
+  return array(
+    'calendar_block' => array(
+      'arguments' => array('day' => NULL, 'op' => NULL),
+    ),
+  );
+}
+
+/**
+ * Respose for the AJAX request
+ */
+function calendar_block_ajax() {
+  $calendar = (object) $_POST;
+
+  $curr_date = ($calendar->year && $calendar->month) ? mktime(1, 1, 1, $calendar->month, 1, $calendar->year) : time();
+
+  $calendar->weekdays = json_decode($calendar->weekdays, TRUE);
+  $weekdays = array_keys($calendar->weekdays);
+
+  $calendar->month = date('m', $curr_date); // The numeric current month (09)
+  $calendar->year = date('Y', $curr_date); // The numeric current year (2008)
+
+  // If the month is equal to the current month, get the current day
+  if (date('Y-m', $curr_date) == date('Y-m')) {
+    $calendar->day = date('d', time()); // The numeric current day (20)
+  }
+
+  $calendar->month_str = date('F', $curr_date); // The current month (September)
+  $calendar->days_in_month = cal_days_in_month(0, $calendar->month, $calendar->year); // The number of days in this month (31)
+  $calendar->first_day_of_month = drupal_substr(drupal_strtolower(date('D', mktime(0, 0, 0, $calendar->month, 1, $calendar->year))), 0, 2); // The first week day of this month (mo, tu, we ....)
+
+  // If the first day of the month is not the same as the first day in the weekdays, set in the configuration settings,
+  // we need to set the last days of the previous month first
+  if ($calendar->first_day_of_month !== $weekdays[0]) {
+    $prev_month = ($calendar->month > 1) ? $calendar->month -1 : 12;
+    $prev_year = ($calendar->month > 1) ? $calendar->year : $calendar->year - 1;
+
+    $tmp_array = $weekdays;
+    $tmp_array = array_flip($tmp_array);
+    $calendar->previous_days_offset = $tmp_array[$calendar->first_day_of_month];
+    $calendar->days_in_previous_month = cal_days_in_month(0, $prev_month, $prev_year);
+
+    for ($i = $calendar->previous_days_offset - 1; $i > -1; $i--) {
+      $calendar->dates[] = (object)array(
+        'year' => $prev_year,
+        'month' => intval($prev_month),
+        'day' => $calendar->days_in_previous_month - $i
+      );
+    }
+  }
+
+  // Here we'll set the days for the month we're viewing
+  for ($i = $calendar->days_in_month - 1; $i > -1; $i--) {
+    $calendar->dates[] = (object)array(
+      'year' => $calendar->year,
+      'month' => intval($calendar->month),
+      'day' => $calendar->days_in_month - $i
+    );
+  }
+
+  // If the number of added dates is not dividable by 7, we need to add some more dates for the next month
+  while ((count($calendar->dates)) / 7 < ceil(count($calendar->dates) / 7)) {
+    $counter = ($counter) ? $counter + 1 : 1;
+    if (!isset($next_month)) {
+      $next_month = ($calendar->month < 12) ? $calendar->month + 1 : 1;
+    }
+    $calendar->dates[] = (object)array(
+      'year' => ($calendar->month < 12 ? $calendar->year : $calendar->year + 1),
+      'month' => intval($next_month),
+      'day' => $counter
+    );
+  }
+  print theme('calendar_block', $calendar);
+}
+
+/**
+ * Theme the calendar.
+ */
+function theme_calendar_block($calendar) {
+  $row_counter = 0;
+  $num_rows = (count($calendar->dates) / 7);
+  $weekdays = array_values($calendar->weekdays);
+
+  $output[] = '  <div id="calendar">';
+
+  // Create the month and year row
+  $output[] = '    <div id="calendar_row'. $row_counter .'" class="clear-block">';
+  $output[] = '      <div id="nav" class="clear-block">';
+  $output[] = '        <div id="calendar_prev" class="'. ($calendar->month > 1 ? ($calendar->month - 1) ."-$calendar->year" : "12-". ($calendar->year - 1)) .'"><span>&lt;</span></div>';
+  $output[] = '        <div id="calendar_month">'. t($calendar->month_str) .' '. $calendar->year .'</div>';
+  $output[] = '        <div id="calendar_next" class="'. ($calendar->month < 12 ? ($calendar->month + 1) ."-$calendar->year" : "01-". ($calendar->year + 1)) .'"><span>&gt;</span></div>';
+  $output[] = '      </div>';
+
+  // Create the weekdays row
+  foreach ($weekdays as $key => $day) {
+    $class = (isset($class)) ? ($key == 6 ? ' last' : '') : ' first';
+    $output[] = "      <div class=\"hok top $class\"><span>". t($day) ."</span></div>";
+  }
+  $output[] = "    </div>";
+  $row_counter++;
+
+  $day_counter = 0;
+
+  // Create the days rows
+  $output[] = "    <div class=\"week\" id=\"calendar_row$row_counter\">";
+  foreach ($calendar->dates as $date) {
+    // Create an easy readable date for modules which use hook_calendar_block().
+    $date->date = (drupal_strlen($date->month) == 1 ? "0$date->month" : $date->month) ."-$date->day-$date->year";
+
+    $class = ($day_counter == 0) ? ' first' : ($day_counter == 6 ? ' last' : '');
+    if ($date->month !== intval($calendar->month)) {
+      $class .= ' disabled';
+    }
+    if ($calendar->day && $date->day == $calendar->day) {
+      $class .= ' today';
+    }
+    // Create a variable for day, so other modules can't interfere in hook_calendar_block
+    $current_day = $date->day;
+
+    // Create a variable for the weekday as a reference for ather modules
+    $date->weekday = $weekdays[$day_counter];
+
+    // Give other modules the opportunity to change the content for each date
+    foreach (module_implements('calendar_block') as $module) {
+      $function = $module .'_calendar_block';
+      $function($calendar, $date, 'alter');
+    }
+
+    $day_counter = ($day_counter < 6) ? $day_counter + 1: 0;
+    $output[] = "      <div class=\"hok $class $date->date\">";
+    $output[] = "        <span>". ($date->content ? $date->content : $current_day) ."</span>";
+    if ($day_counter > 0) {
+      $output[] = "        <div class=\"border_right\"></div>";
+    }
+    if ($row_counter < $num_rows) {
+      $output[] = "        <div class=\"border_bottom\"></div>";
+    }
+    $output[] = "      </div>";
+
+    if ($row_counter < $num_rows && $day_counter == 0) {
+      $row_counter++;
+      $output[] = "    </div>";
+      $output[] = "    <div class=\"week\" id=\"calendar_row$row_counter\">";
+    };
+  }
+  $output[] = "      <div class=\"clear-block\"></div>";
+  $output[] = "    </div>";
+  $output[] = "  </div>";
+  return join("\n", $output);
+}
+
+/**
+ * The help page.
+ */
+function calender_block_help_page() {
+  $output = '<p>'. t('The <em>calendar_block</em> module provides a fully customizable calendar block which can be placed in a region at the !blocks_link.', array('!blocks_link' => l(t('blocks section'), 'admin/build/block')));
+  $output .= ' '. t('In the !block_config of the calendar block, the calendar\'s layout can be fully changed. You can set the colors as well as the size of the calendar so it fits to your website\'s design.', array('!block_config' => l(t('configuration form'), 'admin/build/block/configure/calendar_block/0'))) .'</p>';
+  $output .= '<p>'. t('With this version of the calendar_block module, developers can use the hook_calendar_block() to alter the dates, as well as to set the date and the weekdays the calender has to load on a page call.') .'</p>';
+  $output .= '<p>'. t('If the modules !colorpicker and !slider_textfield are installed, the layout of the calendar is dynamically changed when changing it in the block\'s configuration form.', array('!colorpicker' => l('Colorpicker', 'http://drupal.org/project/colorpicker'), '!slider_textfield' => l(t('Textfield to slider'), 'http://drupal.org/project/slider_textfield'))) .'</p>';
+  $output .= '<h4>'. t('hook_calendar_block()') .'</h4>';
+  $output .= '<p><strong>'. t('Definition') .':</strong></p>';
+  $output .= '<p><code>gallery_calendar_block(&$calendar, &$date, $op)</code></p>';
+  $output .= '<p><strong>'. t('Description') .':</strong></p>';
+  $output .= '<p>'. t('Provide other modules a hook to change the data for the calendar. Modules can create links for dates, change the weekdays, or set the month the calendar has to load on page calls.') .'</p>';
+  $output .= '<p><strong>'. t('Parameters') .':</strong></p>';
+  $output .= '<p><code>&$calendar</code>: '. t('The calendar object which can be altered in the hook function (<code>$op == \'load\'</code>). The calendar object contains the following elements:') .'</p>';
+  $output .= '<p><ul><li><code>&$date->year</code>: '. t('The year on which the calendar is initialized (1900 - ....).') .'</li>';
+  $output .= '<li><code>&$calendar->month</code>: '. t('The month on which the calendar is initialized (1 - 12).') .'</li>';
+  $output .= '<li><code>&$calendar->weekdays</code>: '. t('An array of the week as shown on top of the calendar. This can be used to change the titles of weekdays. Note that the keys in this array should not be changed!');
+  $output .= ' '. t('Both the weekdays and the month\'s title are translatable using the translate !translate_page. This is how the array is built:', array('!translate_page' => l(t('translate interface page'), 'admin/build/translate/search')));
+  $output .= '  <pre class="php">';
+  $output .= '    &$calendar->weekdays = array('."<br />";
+  $output .= '      \'mo\' => \'mo\','."<br />";
+  $output .= '      \'tu\' => \'tu\','."<br />";
+  $output .= '      \'we\' => \'we\','."<br />";
+  $output .= '      \'th\' => \'th\','."<br />";
+  $output .= '      \'fr\' => \'fr\','."<br />";
+  $output .= '      \'sa\' => \'sa\','."<br />";
+  $output .= '      \'su\' => \'su\','."<br />";
+  $output .= '    );</pre>';
+  $output .= '  </li>';
+  $output .= '</ul></p>';
+  $output .= '<p><code>&$date</code>: '. t('The date object which can be altered in the hook function (<code>$op == \'alter\'</code>). The date object contains the following elements:') .'</p>';
+  $output .= '<p><ul><li><code>&$date->day</code>: '. t('The day of the current date object (1 - 31).') .'</li>';
+  $output .= '<li><code>&$date->month</code>: '. t('The month of the current date object (1 - 12).') .'</li>';
+  $output .= '<li><code>&$date->year</code>: '. t('The year of the current date object (1900 - ....).') .'</li>';
+  $output .= '<li><code>&$date->date</code>: '. t('A string representation of the current date ("mm-dd-yy").') .'</li>';
+  $output .= '<li><code>&$date->content</code>: '. t('This is the part where it gets interesting. The content of the day presented in the calendar block can be changed here. Regularly you want to set it to a link referring to a node which has been created on this date.') .'</li>';
+  $output .= '</ul></p>';
+  $output .= '<p><code>&$op</code>: '. t('What kind of action is being performed. Possible values:') .'</p>';
+  $output .= '<p><ul><li>"alter": '. t('In this operation $date->content can be changed.') .'</li>';
+  $output .= '<li>"load": '. t('In this operation you can set the month on which the calendar has to be loaded.') .'</li>';
+  $output .= '</ul></p>';
+  $output .= '<p><strong>'. t('Code') .':</strong></p>';
+  $output .= '<p><pre class="php">';
+  $output .= 'function gallery_calendar_block(&$calendar, &$date, $op) {'."<br />";
+  $output .= '  switch($op) {'."<br />";
+  $output .= '    case \'load\':'."<br />";
+  $output .= '      // Here the date is fixed on october 1978'."<br />";
+  $output .= '      $calendar->month = 10;'."<br />";
+  $output .= '      $calendar->year = 1978;'."<br />";
+  $output .= "<br />";
+  $output .= '      // Change the weekday\'s format and set the first day of the week to sunday.'."<br />";
+  $output .= '      $calendar->weekdays =  array('."<br />";
+  $output .= '        \'su\' => \'S\','."<br />";
+  $output .= '        \'mo\' => \'M\','."<br />";
+  $output .= '        \'tu\' => \'T\','."<br />";
+  $output .= '        \'we\' => \'W\','."<br />";
+  $output .= '        \'th\' => \'T\','."<br />";
+  $output .= '        \'fr\' => \'F\','."<br />";
+  $output .= '        \'sa\' => \'S\','."<br />";
+  $output .= '      );'."<br />";
+  $output .= '      break;'."<br />";
+  $output .= '    case \'alter\':'."<br />";
+  $output .= '      if ($date->date == \'10-19-1978\') {'."<br />";
+  $output .= '        // Create a link from 19 october 1978'."<br />";
+  $output .= '        $date->content = l($date->day, "node");'."<br />";
+  $output .= '      }'."<br />";
+  $output .= '      else if ($date->year > 2008 && $date->month >= 6 && $date->weekday == \'mo\') {'."<br />";
+  $output .= '        // Create a tooltip for each monday after may 2008.'."<br />";
+  $output .= '        $date->content = \'&lt;span class="js_tooltip"&gt;\'. $date->day .\'&lt;/span&gt;;'."<br />";
+  $output .= '        $date->content .= \'&lt;div class="js_tooltip_hidden"&gt;Content for this tooltip&lt;/div&gt;\';'."<br />";
+  $output .= '      }'."<br />";
+  $output .= '      break;'."<br />";
+  $output .= '  }'."<br />";
+  $output .= '}'."<br />";
+  $output .= '</pre></p>';
+  $output .= '<p><strong>'. t('TODO') .':</strong></p>';
+  $output .= '<p><ul><li><strong>Caching</strong>: '. t('Caching the calendar would be a huge performance improvement') .'</li>';
+  $output .= '<li><strong>Configuration for nodes</strong>: '. t('In the configuration options of the calendar block, users should be abled to check which nodetypes should be tracked by the calendar_block module. In the publication options of node form, users should be able to uncheck the node from being tracked.') .'</li>';
+  $output .= '</ul></p>';
+  return $output;
+}
+
+/**
+ * Calendar days in month
+ *
+ * Some PHP versions don't have cal_days_in_month(), this accounts for that.
+ */
+if (!function_exists('cal_days_in_month')) {
+  function cal_days_in_month($calendar, $month, $year) {
+    // $calendar just gets ignored, assume gregorian
+    // calculate number of days in a month
+    return $month == 2 ? ($year % 4 ? 28 : ($year % 100 ? 29 : ($year % 400 ? 28 : 29))) : (($month - 1) % 7 % 2 ? 30 : 31);
+  }
+}
+
+
+/**
+ * json_decode for < PHP 5
+ */
+if (!function_exists('json_decode')) {
+  function json_decode($v) {
+    if ($v{0} == '"') {
+      $v = drupal_substr($v, 1, -1);
+    }
+    elseif ($v{0} == '{') {
+      $var = explode(",", drupal_substr($v, 1, -2));
+      $v = array();
+      foreach ($var as $value) {
+        $va = explode(":", $value);
+        $v[$va[0]] = json_decode($va[1]);
+      }
+    }
+    elseif ($v{0} == '[') {
+      $var = explode(",", drupal_substr($v, 1, -2));
+      $v = array();
+      foreach ($var as $value) {
+        $v[] = json_decode($va[0]);
+      }
+    }
+    return $v;
+  }
+}

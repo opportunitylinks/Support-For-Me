@@ -1,0 +1,88 @@
+<?php
+// $Id: omega_tools.module,v 1.1.2.1 2009/10/10 20:47:14 himerus Exp $
+/**
+ * Implementation of hook_form_alter()
+ * Functionality:
+ *  - system_theme_settings form
+ *    For this form the form_alter organizes the form a bit better, adding fieldsets
+ *    to the default items, making them collapsible, and changing the default size of
+ *    the file uploads for logo and favicon
+ */
+function omega_tools_form_alter(&$form, $form_state, $form_id) {
+  switch($form_id) {
+  	case 'system_theme_settings':
+    // add fieldset options to the default system theme form
+    $form['theme_settings']['#collapsible'] = TRUE;
+    $form['theme_settings']['#collapsed'] = TRUE;
+    
+    $form['logo']['logo_upload']['#size'] = 30;
+    $form['logo']['#collapsible'] = TRUE;
+    $form['logo']['#collapsed'] = TRUE;
+    $form['favicon']['favicon_upload']['#size'] = 30;
+    $form['favicon']['#collapsible'] = TRUE;
+    $form['favicon']['#collapsed'] = TRUE;
+    // if we have theme_specific settings provided by a theme, do the same as above
+    // and also move it up to the top of the page using weights.
+    if ($form['theme_specific']) {
+	    $form['theme_specific']['#collapsible'] = TRUE;
+	    $form['theme_specific']['#collapsed'] = FALSE;
+	    $form['theme_specific']['#weight'] = -100;
+    }
+    // create a parent fieldset for the default stragglers
+    $form['general_settings'] = array(
+	    '#type' => 'fieldset',
+	    '#title' => t('General Theme Settings'),
+	    '#collapsible' => TRUE,
+	    '#collapsed' => FALSE,
+      '#weight' => 0,
+	  );
+	  // move the default three fieldsets inside of the parent fieldset to make my life less crappy
+	  $form['general_settings']['theme_settings'] = $form['theme_settings'];
+	  
+    if ($form['node_info']) {
+      $form['node_info']['#collapsible'] = TRUE;
+      $form['node_info']['#collapsed'] = FALSE;
+      $form['general_settings']['theme_settings']['#collapsed'] = FALSE;
+      $form['general_settings']['node_info'] = $form['node_info'];
+    }
+    $form['general_settings']['logo'] = $form['logo'];
+    $form['general_settings']['favicon'] = $form['favicon'];
+	  // remove the old versions so they don't get rendered twice
+	  unset($form['theme_settings']);
+	  unset($form['logo']);
+	  unset($form['favicon']);
+	  unset($form['node_info']);
+    break;	
+  }
+}
+function omega_tools_block($op = 'list', $delta = 0, $edit = array()) {
+	// get a list of themes
+	$theme_key = variable_get('theme_default', 'garland');
+	$block_regions = system_region_list($theme_key);
+	switch ($op) {
+    case 'list':
+      foreach($block_regions AS $region_id => $region_desc){
+      	$blocks['omega_'.$region_id] = array(
+          'info' => t('Omega - '. ucwords($region_desc)),
+        );
+      }
+      //krumo($blocks);
+      return $blocks;
+    case 'configure':
+    	return $form;
+    case 'save':
+    	break;
+    case 'view': default:
+    	//krumo($delta);
+    	$real_delta = str_replace('omega_', '', $delta);
+    	$real_title = ucwords($block_regions[$real_delta]);
+			$block['subject'] = t($real_title);
+			$block['content'] = _omega_tools_generate_block_content($real_delta);
+			//krumo($block);
+      return $block;
+      
+	}
+}
+function _omega_tools_generate_block_content($rid){
+	return '<div class="geshifilter"><code class="php">&lt;?php print $'.$rid.';?&gt;</code></div>';
+}

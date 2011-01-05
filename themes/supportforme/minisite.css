@@ -1,0 +1,28 @@
+#page .title
+{
+	height: 130px;
+}
+#page .title .ribbon
+{
+	position: absolute;
+	top: 20px;
+}
+#page .title .logo
+{
+	top: 18px;
+	left: 15px;
+    z-index: 50;
+    width: 120px;
+    height: 92px;
+}
+#page .title h2
+{
+    position: absolute;
+    top: 54px;
+    right: 30px;
+	margin: 0;
+}
+#page .title p
+{
+	display: none;
+}

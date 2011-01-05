@@ -1,0 +1,632 @@
+<?php
+// $Id$
+/**
+ * @file
+ * evince webservice api tester
+ *
+ * provides a simple form page to test the evince api module
+ */
+
+/**
+ * Implementation of hook_perm().
+ */
+function evince_api_test_perm() {
+  return array('test evince api');
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function evince_api_test_menu() {
+  $items['evince/test'] = array(
+    'title' => 'evince API Test page ',
+    'description' => 'Test harness for the evince api module.',
+    'page callback' => 'evince_api_test_page',
+    'access arguments' => array('test evince api'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['evince/test/search'] = array(
+    'title' => 'Search',
+    'description' => 'Test harness for the evince api module.',
+    'access arguments' => array('test evince api'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items['evince/test/category'] = array(
+    'title' => 'Categories',
+    'description' => 'Test harness for the evince api module.',
+    'page callback' => 'evince_api_test_page_category',
+    'page arguments' => NULL,
+    'access arguments' => array('test evince api'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 9,
+  );
+  $items['evince/test/category/%'] = array(
+    'title' => 'Categories',
+    'description' => 'Test harness for the evince api module.',
+    'page callback' => 'evince_api_test_page_category_browse',
+    'page arguments' => array(3),
+    'access arguments' => array('test evince api'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 9,
+  );
+  $items['evince/test/category/%/%'] = array(
+    'title' => 'Categories',
+    'description' => 'Test harness for the evince api module.',
+    'page callback' => 'evince_api_test_page_category_info',
+    'page arguments' => array(3, 4),
+    'access arguments' => array('test evince api'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 9,
+  );
+  $items['evince/test/record/%/%'] = array(
+    'title' => 'evince API single record',
+    'description' => 'Single record display',
+    'page callback' => 'evince_api_test_record',
+    'page arguments' => array(3, 4),
+    'access arguments' => array('test evince api'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['evince/test/atoz'] = array(
+    'title' => 'A to Z',
+    'description' => 'Test harness for the evince api module.',
+    'page callback' => 'evince_api_test_page_atoz',
+    'page arguments' => NULL,
+    'access arguments' => array('test evince api'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 10,
+  );
+  $items['evince/test/atoz/%'] = array(
+    'title' => 'A to Z',
+    'description' => 'Test harness for the evince api module.',
+    'page callback' => 'evince_api_test_page_atoz',
+    'page arguments' => array(3),
+    'access arguments' => array('test evince api'),
+    'type' => MENU_CALLBACK,
+    'weight' => 10,
+  );
+  return $items;
+}
+
+/**
+ * Test page - search
+ */
+function evince_api_test_page() {
+  $output = drupal_get_form('evince_api_test_form');
+  return $output;
+}
+
+/**
+ * Define the test form.
+ */
+function evince_api_test_form(&$form_state = NULL) {
+
+  drupal_add_css(drupal_get_path('module', 'evince_api_test') .'/evince_api_test.css');
+
+  //helps with identifying filters
+  $form['#tree'] = TRUE;
+
+  $form['info'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Using SNAC',
+    '#value' => variable_get('evince_api_snac', ''),
+    '#size' => 6,
+    '#disabled' => TRUE,
+  );
+  $form['record_types'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Record Types'),
+    '#options' => array('ascservices' => 'ASC Services', 'ascserviceproviders' => 'ASC Service Providers', 'events' => 'Events', 'organisations' => 'Organisations'),
+    '#default_value' => (array)$form_state['storage']['record_types'],
+  );
+  $form['start'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Start record'),
+    '#size' => 4,
+    '#default_value' => $form_state['storage']['start'],
+  );
+  $form['ev_count'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Number of records'),
+    '#size' => 4,
+    '#default_value' => $form_state['storage']['ev_count'],
+  );
+  $form['sort_options'] = array(
+    '#type' => 'value',
+    '#value' => array(t('none'), t('facet'), t('filter'), t('marker'), t('modifieddate'), t('quicksearch'), t('recordtype'), t('text'), t('title')),
+  );
+  $form['sort'] = array(
+    '#type' => 'select',
+    '#title' => t('Sort field'),
+    '#options' => $form['sort_options']['#value'],
+    '#default_value' => $form_state['storage']['sort'],
+  );
+  $form['sort_order'] = array(
+    '#type' => 'radios',
+    '#title' => t('Sort order'),
+    '#options' => array('asc' => 'Ascending', 'desc' => 'Descending'),
+    '#default_value' => $form_state['storage']['sort_order'],
+  );
+  $form['search_text'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Search text'),
+    '#default_value' => $form_state['storage']['search_text'],
+  );
+  $form['starting_with_options'] = array(
+    '#type' => 'value',
+    '#value' => array_merge(array(' '), range('A', 'Z'), range('0', '9')),
+  );
+  $form['starting_with'] = array(
+    '#type' => 'select',
+    '#title' => t('Starting with'),
+    '#options' => $form['starting_with_options']['#value'],
+    '#default_value' => $form_state['storage']['starting_with'],
+  );
+  $form['zone_id'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Zone ID'),
+    '#size' => 6,
+    '#default_value' => $form_state['storage']['zone_id'],
+  );
+  $form['term_id'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Term ID'),
+    '#size' => 10,
+    '#default_value' => $form_state['storage']['term_id'],
+  );
+  $form['latitude'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Latitude'),
+    '#size' => 10,
+    '#default_value' => $form_state['storage']['latitude'],
+  );
+  $form['longitude'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Longitude'),
+    '#size' => 10,
+    '#default_value' => $form_state['storage']['longitude'],
+  );
+  $form['radius'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Radius'),
+    '#size' => 10,
+    '#default_value' => $form_state['storage']['radius'],
+  );
+
+  $form['facets'] = array(
+    '#type' => checkboxes,
+    '#title' => 'Facets',
+    '#options' => array(
+      'local_area' => t('local_area'),
+      'region_area' => t('region_area'),
+      'area_area' => t('area_area'),
+      'example_cost' => t('example_cost'),
+      'fbookingcategory' => t('fbookingcategory'),
+      'fcosttype' => t('fcosttype'),
+      'fdctype' => t('fdctype'),
+      'fopeninghours' => t('fopeninghours'),
+      'fpostaltown' => t('fpostaltown'),
+      'fvillagetownname' => t('fvillagetownname'),
+      'immediatevacancies' => t('immediatevacancies'),
+      'maxage' => t('maxage'),
+      'minage' => t('minage'),
+      'recordtype' => t('recordtype'),
+      ),
+    '#default_value' => (array)$form_state['storage']['facets'],
+  );
+
+//dpr($filters);
+  $form['filters'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Filters',
+  );
+  $filters = (array)$form_state['evince_api_test']['filters'];
+  foreach ($filters as $fname => $fvals) {
+    $form['filters'][$fname] = array(
+      '#type' => 'checkboxes',
+      '#title' => $fname,
+      '#options' => array_flip($fvals),
+      '#default_value' => (array)$form_state['storage']['filters'][$fname],
+    );
+  }
+  $form['create_nodes'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Nodes'),
+    '#options' => array('create' => 'Create nodes'),
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+  );
+  return $form;
+}
+
+/**
+ * Validate the test form.
+ */
+function evince_api_test_form_validate($form, &$form_state) {
+}
+
+/**
+ * Handle form submission.
+ */
+function evince_api_test_form_submit($form, &$form_state) {
+  $record_types = $form_state['values']['record_types'];
+  $form_state['storage']['record_types'] = $record_types;
+
+  $start = $form_state['values']['start'];
+  $form_state['storage']['start'] = $start;
+
+  $count = $form_state['values']['ev_count'];
+  $form_state['storage']['ev_count'] = $count;
+
+  $sort = $form_state['values']['sort'];
+  $form_state['storage']['sort'] = $sort;
+  $url_sort = NULL;
+  if ($sort > 0) {
+    $url_sort = $form_state['values']['sort_options'][$sort];
+  }
+
+  $sort_order = $form_state['values']['sort_order'];
+  $form_state['storage']['sort_order'] = $sort_order;
+
+  $search_text = $form_state['values']['search_text'];
+  $form_state['storage']['search_text'] = $search_text;
+
+  $starting_with = $form_state['values']['starting_with'];
+  $form_state['storage']['starting_with'] = $starting_with;
+  $url_starting_with = NULL;
+  if ($starting_with > 0) {
+    $url_starting_with = $form_state['values']['starting_with_options'][$starting_with];
+  }
+
+  $latitude = $form_state['values']['latitude'];
+  $form_state['storage']['latitude'] = $latitude;
+
+  $longitude = $form_state['values']['longitude'];
+  $form_state['storage']['longitude'] = $longitude;
+
+  $radius = $form_state['values']['radius'];
+  $form_state['storage']['radius'] = $radius;
+
+  $facets = $form_state['values']['facets'];
+  $form_state['storage']['facets'] = $facets;
+
+  $filters = $form_state['values']['filters'];
+  $form_state['storage']['filters'] = $filters;
+
+  $url_filters = array();
+  foreach ((array)$filters as $filter) {
+    foreach ($filter as $k => $v) {
+      if ($v) {
+        $url_filters[] = $v;
+      }
+    }
+  }
+
+  $zone_id = $form_state['values']['zone_id'];
+  $form_state['storage']['zone_id'] = $zone_id;
+  $term_id = $form_state['values']['term_id'];
+  $form_state['storage']['term_id'] = $term_id;
+  if ($zone_id && $term_id) {
+    $url_filters[] = 'filter='. $zone_id .'_externaltermid:'. $term_id;
+  }
+
+  $results = evince_api_facet_search($record_types, $search_text, $start, $count, $url_sort, $sort_order, $facets, $url_filters, $url_starting_with, $latitude, $longitude, $radius);
+
+  drupal_set_message($results['url']);
+  drupal_set_message($results['url_parts']);
+
+  if ($results['status'] != 'OK') {
+    if ($results['status'] == 'not configured') {
+      drupal_set_message('Please '. l('configure the API', 'admin/settings/evince-api') .' first.', 'error');
+    }
+    else {
+      drupal_set_message('Error reading results: '. $results['status'], 'warning');
+    }
+    return;
+  }
+  if (empty($results['entries'])) {
+    drupal_set_message('No data returned from search.', 'warning');
+    return;
+  }
+
+  $rows = array();
+  $model_name = 'http://opp-links.org.uk/XMLSchema/AtomModel';
+
+  // delete old nodes if creating nodes
+  if ($form_state['values']['create_nodes']['create']) {
+    evince_api_test_delete_nodes();
+  }
+
+  foreach ($results['entries'] as $item) {
+    $subitem = $item['content'][0]['child'][$model_name]['model'][0]['child'][$model_name];
+    $record_type = $subitem['recordtype'][0]['data'];
+    $record_id = $subitem['recordid'][0]['data'];
+    $postcode = $subitem['postcode'][0]['data'];
+    $rows[] = array(
+      l($record_id, 'evince/test/record/'. $record_type .'/'. $record_id),
+      $postcode,
+      $item['title'] .'<br />'. $item['description'],
+    );
+
+    if ($form_state['values']['create_nodes']['create']) {
+      evince_api_test_create_node($item);
+    }
+  }
+  $hdrs = array('id', 'postcode', 'title and description');
+  $count = '<p>'. $results['opensearch']['itemsPerPage'] .' of '. $results['opensearch']['totalResults'] .' reported. ';
+  $count .= format_plural(count($rows), '1 record', '@count counted') . '</p>';
+  $output = $count . theme('table', $hdrs, $rows) . $count;
+
+  $filters = $results['facets'][0]['child']['http://opp-links.org.uk/XMLSchema/FacetResults']['field'];
+
+  foreach ((array)$filters as $filter) {
+    $filter_values = $filter['child']['http://opp-links.org.uk/XMLSchema/FacetResults']['value'];
+    if (!empty($filter_values)) {
+      foreach ($filter_values as $value) {
+        $name = $value['attribs']['']['name'];
+        $qs = $value['attribs']['']['qs'];
+        $count = $value['data'];
+        $f[$filter['attribs']['']['name']][$name .' ('. $count .')'] = $qs;
+      }
+    }
+  }
+  $form_state['evince_api_test']['filters'] = $f;
+  drupal_set_message($output);
+}
+
+/**
+ * Test page - category
+ */
+function evince_api_test_page_category() {
+
+  $results = evince_api_get_categories();
+
+  if ($results['status'] != 'OK') {
+    drupal_set_message('Error reading results: '. $results['status'], 'warning');
+    return;
+  }
+  if (empty($results['entries'])) {
+    drupal_set_message('No data returned from search.', 'warning');
+    return;
+  }
+
+  $rows = array();
+  $model_name = 'http://opp-links.org.uk/XMLSchema/AtomModel';
+
+  foreach ($results['entries'] as $item) {
+    $subitem = $item['content'][0]['child'][$model_name]['model'][0]['child'][$model_name];
+    $record_id = $subitem['recordid'][0]['data'];
+    $rows[] = array(
+      $record_id,
+      l($item['title'], 'evince/test/category/'. $record_id),
+    );
+  }
+
+  $hdrs = array('ID', 'Category');
+  $output = theme('table', $hdrs, $rows);
+  $output .= '<p>'. format_plural(count($rows), '1 record', '@count records') .'</p>';
+
+  return $output;
+}
+
+/**
+ * Test page - category browse
+ */
+function evince_api_test_page_category_browse($category_id) {
+
+  $data = evince_api_browse_category($category_id);
+  $xml = new SimpleXMLElement($data->data);
+  $xml = (array)$xml;
+
+  return evince_api_walk_categories($xml['Term'], $category_id);
+}
+
+function evince_api_walk_categories($terms, $category_id) {
+  if (!$terms) return NULL;
+
+  $rows = array();
+  $title = 'DC.Title';  // (dots confuse object references)
+
+  foreach ($terms as $term) {
+    $rows[] = array(
+      $term->TermId
+      .' '
+      . l($term->$title, 'evince/test/category/'. $category_id .'/'. $term->TermId)
+      . evince_api_walk_categories($term->Child, $category_id));
+  }
+  $headers = array('TermId', 'Title');
+  return theme('item_list', $rows);
+}
+
+/**
+ * Test page - category info
+ */
+function evince_api_test_page_category_info($category_id, $term_id) {
+
+  $data = evince_api_category_info($category_id, $term_id);
+  $xml = new SimpleXMLElement($data->data);
+  $xml = (array)$xml;
+
+  $title_name = 'DC.Title';
+
+  $term = $xml['Term'];
+  $term_id = $term->TermId;
+  $term_title = $term->$title_name;
+  $rows[] = array('Term ID', $term_id, $term_title);
+
+  $parent = $term->Parent;
+  $parent_id = $parent->TermId;
+  $parent_title = $parent->$title_name;
+  $rows[] = array('Parent', l($parent_id ? $parent_id : 'top', 'evince/test/category/'. $category_id .'/'. $parent_id), $parent_title);
+
+  foreach ($term->Child as $child) {
+    $child_id = $child->TermId;
+    $child_title = $child->$title_name;
+    $rows[] = array('Child', l($child_id, 'evince/test/category/'. $category_id .'/'. $child_id), $child_title);
+  }
+
+  $headers = array('Element', 'ID', 'Title');
+  $output = theme('table', $headers, $rows);
+
+  $results = evince_api_records_in_term($category_id, $term_id);
+
+  if ($results['status'] != 'OK') {
+    if ($results['status'] == 'not configured') {
+      drupal_set_message('Please '. l('configure the API', 'admin/settings/evince-api') .' first.', 'error');
+    }
+    else {
+      drupal_set_message('Error reading results: '. $results['status'], 'warning');
+    }
+    return $output;
+  }
+  if (empty($results['entries'])) {
+    return $output;
+  }
+
+  $rows = array();
+  $model_name = 'http://opp-links.org.uk/XMLSchema/AtomModel';
+
+  foreach ($results['entries'] as $item) {
+    $subitem = $item['content'][0]['child'][$model_name]['model'][0]['child'][$model_name];
+    $record_type = $subitem['recordtype'][0]['data'];
+    $record_id = $subitem['recordid'][0]['data'];
+    $postcode = $subitem['postcode'][0]['data'];
+    $rows[] = array(
+      l($record_id, 'evince/test/record/'. $record_type .'/'. $record_id),
+      $postcode,
+      $item['title'] .'<br />'. $item['description'],
+    );
+  }
+  $url = '<p>'. $results['url'] .'</p>';
+  $hdrs = array('id', 'postcode', 'title and description');
+  $count = '<p>'. format_plural(count($rows), '1 record', '@count records') . '</p>';
+  $output .= $url . $count . theme('table', $hdrs, $rows) . $count;
+
+  return $output;
+}
+
+/**
+ * get single record
+ *
+ */
+function evince_api_test_record($record_type, $record_id) {
+  $data = evince_api_get_record($record_type, $record_id);
+
+  if (empty($data)) {
+    drupal_set_message('no data returned from API', 'warning');
+    return;
+  }
+
+  $xml = new SimpleXMLElement($data->data);
+  $xml = (array)$xml;
+
+  $title = $xml['DC.Title'];
+
+  $description = (array)$xml['DC.Description'][0];
+  $description = $description['DC.Description'];
+
+  $contact_details = (array)$xml['ContactDetails'];
+
+  $address = (array)$contact_details['Address'];
+
+  $bs7666_address = (array)$address['BS7666Address'];
+
+  $saon = (array)$bs7666_address['SAON'];
+  $saon = $saon['Description'];
+
+  $street = $bs7666_address['StreetDescription'];
+
+  $town = $bs7666_address['Town'];
+  $post_town = $bs7666_address['PostTown'];
+
+  $postcode = $bs7666_address['PostCode'];
+
+  $address = array();
+  $address[] = $saon;
+  $address[] = $street;
+  $address[] = $town;
+  $address[] = $post_town;
+  $address[] = $postcode;
+  $address = implode('<br />', $address);
+
+  $contact_number = (array)$contact_details['ContactNumber'];
+  $contact_number = $contact_number['TelNationalNumber'];
+
+  $email_address = (array)$contact_details['EmailAddress'];
+  $email_address = $email_address['EmailAddress'];
+
+  $website_address = $contact_details['WebsiteAddress'];
+
+  $output = '<h2>'. $title .'</h2>';
+  $output .= '<p>'. $description .'</p>';
+  $output .= '<p>'. $address .'</p>';
+  $output .= '<p>'. $contact_number .'</p>';
+  $output .= '<p>'. $email_address .'</p>';
+  $output .= '<p>'. $website_address .'</p>';
+  //$output .= '<pre>'. print_r($xml, TRUE) .'</pre>';
+  return $output;
+}
+
+/**
+ * Test page - atoz
+ */
+function evince_api_test_page_atoz($start_char = NULL) {
+  if (empty($start_char)) {
+    foreach (array_merge(range('0', '9'), range('A', 'Z')) as $start_char) {
+      $links[] = l($start_char, 'evince/test/atoz/'. $start_char);
+    }
+    return implode(' ', $links);
+  }
+
+  $record_types = array('ascservices', 'ascserviceproviders');
+  $search_text = NULL;
+  $start = NULL;
+  $count = NULL;
+  $url_sort = NULL;
+  $sort_order = NULL;
+  $facets = array();
+  $url_filters = array();
+  $url_starting_with = $start_char;
+  $latitude = NULL;
+  $longitude = NULL;
+  $radius = NULL;
+
+  $results = evince_api_facet_search($record_types, $search_text, $start, $count, $url_sort, $sort_order, $facets, $url_filters, $url_starting_with, $latitude, $longitude, $radius);
+
+  if ($results['status'] != 'OK') {
+    if ($results['status'] == 'not configured') {
+      drupal_set_message('Please '. l('configure the API', 'admin/settings/evince-api') .' first.', 'error');
+    }
+    else {
+      drupal_set_message('Error reading results: '. $results['status'], 'warning');
+    }
+    return NULL;
+  }
+  if (empty($results['entries'])) {
+    return 'No records found';
+  }
+
+  $rows = array();
+  $model_name = 'http://opp-links.org.uk/XMLSchema/AtomModel';
+
+  foreach ($results['entries'] as $item) {
+    $subitem = $item['content'][0]['child'][$model_name]['model'][0]['child'][$model_name];
+    $record_type = $subitem['recordtype'][0]['data'];
+    $record_id = $subitem['recordid'][0]['data'];
+    $postcode = $subitem['postcode'][0]['data'];
+    $rows[] = array(
+      l($record_id, 'evince/record/'. $record_type .'/'. $record_id),
+      $postcode,
+      $item['title'] .'<br />'. $item['description'],
+    );
+  }
+  $url = '<p>'. $results['url'] .'</p>';
+  $hdrs = array('id', 'postcode', 'title and description');
+  $count = '<p>'. format_plural(count($rows), '1 record', '@count records') .'</p>';
+  $output = $url . $count . theme('table', $hdrs, $rows) . $count;
+
+  return $output;
+}
+
+include_once('evince_api_test_node_code.inc');

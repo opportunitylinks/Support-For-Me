@@ -1,0 +1,15 @@
+<?php
+// $Id: la_info.module,v 1.0 2010/09/06 16:00:00 miker Exp $
+
+/**
+ * @file
+ * Install, update and uninstall functions for the LA info.
+ */
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function la_info_uninstall() {
+
+  variable_del('la_info_string');
+}

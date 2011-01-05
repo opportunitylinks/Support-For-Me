@@ -1,0 +1,94 @@
+<?php
+// $Id$
+/**
+ * @file
+ * evince webservice directory search
+ *
+ * provides the basic search pages to filter evince database records
+ * and create nodes for use by the directory display page
+ */
+
+/**
+ * Implementation of hook_perm().
+ */
+function evince_dir_perm() {
+  return array('access evince directory', 'administer evince directory');
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function evince_dir_menu() {
+  $items['evince/dir'] = array(
+    'title' => 'Search',
+    'description' => 'Search results page.',
+    'page callback' => 'evince_dir_search_results',
+    'page arguments' => NULL,
+    'access arguments' => array('access evince directory'),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => 10,
+  );
+
+  $items['admin/settings/evince-dir'] = array(
+    'title' => 'Evince DIR settings',
+    'description' => 'Configure the evince dir settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('evince_dir_admin_settings'),
+    'access arguments' => array('administer evince directory'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'evince_dir.admin.inc',
+  );
+
+  return $items;
+}
+
+function evince_dir_search_results() {
+  $block = (object) module_invoke('evince_dir_search', 'block', 'view', 0); // $module, $hook, $args...
+  unset($block->subject);
+  $qs = '<div id="quicksearch">';
+  $qs .= theme('block', $block);
+  $qs .= '</div>';
+
+  $block = (object) module_invoke('evince_dir_search', 'block', 'view', 1); // $module, $hook, $args...
+  unset($block->subject);
+  $f = '<div id="filters">';
+  $f .= theme('block', $block);
+  $f .= '</div>';
+
+  $search = evince_dir_get_search();
+  $tabs = evince_dir_tabs($search['qs_count']);
+
+  return $qs . $f . $tabs;
+}
+
+function evince_dir_tabs($num_entries = 0) {
+  drupal_add_js(drupal_get_path('module', 'evince_dir') .'/js/evince_dir.js');
+  drupal_add_css(drupal_get_path('module', 'evince_dir') .'/css/evince_dir.css');
+
+  $list = views_embed_view('Directory', 'page_1');
+
+  // display tabs only if there are search results
+  if (strpos($list, '<div class="view-content">')) {
+    $tabs = '<div id="tabbed">';
+    $tabs .= '<ul id="tablinks">
+              <li id="tabsfmlist"><a href="#_">List</a></li>
+              <li id="tabsfmcal"><a href="#_">Calendar</a></li>
+              <li id="tabsfmmap"><a href="#_">Map</a></li>
+              </ul>';
+    if ($num_entries) {
+      $tabs .= '<div id="numentries">'. $num_entries .' results</div>';
+    }
+    $tabs .= '<div class="sfmtab" id="sfmtablist">';
+    $tabs .= $list;
+    $tabs .= '</div>';
+    $tabs .= '<div class="sfmtab" id="sfmtabcal">';
+    $tabs .= views_embed_view('Directory', 'calendar_1');
+    $tabs .= '</div>';
+    $tabs .= '<div class="sfmtab" id="sfmtabmap">';
+    $tabs .= views_embed_view('Directory', 'page_2');
+    $tabs .= '</div>';
+    $tabs .= '</div>';
+  }
+
+  return $tabs;
+}

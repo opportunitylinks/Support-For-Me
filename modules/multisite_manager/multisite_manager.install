@@ -1,0 +1,74 @@
+<?php
+// $Id: multisite_manager.install,v 1.3.4.2 2008/03/12 19:10:34 schuyler1d Exp $
+
+function multisite_manager_schema() {
+  $schema['drupal_site'] = array(
+    'fields' => array(
+      'vid' => array('type'=>'int','unsigned'=>TRUE, 'not null'=>TRUE, 'default'=> 0),
+      'nid' => array('type'=>'int','unsigned'=>TRUE, 'not null'=>TRUE, 'default'=> 0),
+      'shortname' => array('type'=>'varchar', 'not null'=>TRUE, 'length'=>45),
+      'profile' => array('type'=>'varchar', 'not null'=>TRUE, 'length'=>255),
+      'link' => array('type'=>'varchar', 'not null'=>TRUE, 'default'=> '', 'length'=>255),
+      'installed' => array('type'=>'int','size'=>'tiny', 'not null'=>TRUE, 'default'=> 0),
+      'run_cron' => array('type'=>'int','size'=>'tiny', 'not null'=>TRUE, 'default'=> 0),
+      'db_prefix' => array('type'=>'varchar','length'=>45, 'not null'=>TRUE, 'default'=> ''),
+      'db_user' => array('type'=>'varchar','length'=>45, 'not null'=>TRUE, 'default'=> ''),
+      'db_path' => array('type'=>'varchar','length'=>45, 'not null'=>TRUE, 'default'=> ''),
+    ),
+    'indexes' => array(
+      'drupal_site_nid'    => array('nid')
+    ),
+    'primary key' => array('vid','nid'),			       
+  );
+  return $schema;
+}
+
+function multisite_manager_install() {
+  drupal_install_schema('multisite_manager');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function multisite_manager_uninstall() {
+  drupal_uninstall_schema('multisite_manager');
+  variable_del('multisite_manager_dbprefix_default');
+  variable_del('multisite_manager_dbpath_default');
+  variable_del('multisite_manager_link_default');
+}
+
+// following versioning described at: http://drupal.org/node/136078
+// XYZZ
+// X = Drupal major number (eg 5 = 5.x)
+// Y = Module major number (eg 0 = 0.x, 1 = 1.x)
+// ZZ = increment
+function multisite_manager_update_5000() {
+  $items = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $items[] = update_sql("ALTER TABLE {drupal_site} ADD COLUMN run_cron tinyint NOT NULL default '0' AFTER link");
+      break;
+    case 'pgsql':
+      $items[] = update_sql("ALTER TABLE {drupal_site} ADD COLUMN run_cron smallint NOT NULL default '0'");
+      break;
+  } // end switch db_type
+  return $items;
+} // end function multisite_manager_update_5000()
+
+function multisite_manager_update_5001() {
+  $items = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $items[] = update_sql("ALTER TABLE {drupal_site} ADD COLUMN installed tinyint NOT NULL default '0' AFTER link");
+      break;
+    case 'pgsql':
+      $items[] = update_sql("ALTER TABLE {drupal_site} ADD COLUMN installed smallint NOT NULL default '0'");
+      break;
+  } // end switch db_type
+  ///older configuration meant that all sites were installed
+  db_query("UPDATE {drupal_site} SET installed=1");
+  return $items;
+} // end function multisite_manager_update_5000()
+

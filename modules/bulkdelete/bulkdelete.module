@@ -1,0 +1,154 @@
+<?php
+
+function bulkdelete_menu() {
+  $items = array();
+
+  $items['admin/content/node/delete'] = array(
+    'title' => 'Bulk delete nodes',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bulkdelete_form'),
+    'access arguments' => array('administer nodes'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 11,
+  );
+
+  return $items;
+}
+
+function bulkdelete_form() {
+  $options = array();
+  $types = node_get_types();
+  ksort($types);
+  foreach ($types as $key => $values) {
+    $count = db_result(db_query("SELECT COUNT(nid) FROM {node} WHERE type='%s'", $key));
+    if ($count > 0) {
+      $options[$key] = "$values->name ($key) ($count)";
+    }
+  }
+  $form['types'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Content types for deletion'),
+    '#options' => $options,
+    '#description' => t('All nodes of these types will be deleted using the batch API.'),
+  );
+  $form['quick'] = array(
+    '#type' => 'radios',
+    '#title' => t('API'),
+    '#default_value'  => 0,
+    '#options' => array(
+      0 => t('Standard'),
+      1 => t('Quick'),
+    ),
+    '#description' => t('Please choose how to delete the nodes.'),
+  );
+
+  $form['standard_desc'] = array('#type' => 'item', '#value' => t('<strong>Standard</strong> means we use node_delete() which is slower but reliable. <strong>Warning!</strong> You will get a watchdog message for every node that is deleted.'));
+
+  $form['quick_desc'] = array('#type' => 'item', '#value' => t('<strong>Quick</strong> is very fast and means we try to discover all node delete hooks and use SQL to actually delete the nodes. This might run into erros, leave data behind or even crash.'));
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Delete'),
+  );
+
+  return $form;
+}
+
+function bulkdelete_form_submit($form, &$form_state) {
+
+  $quick = $form_state['values']['quick'];
+
+  // Process the form results
+  $types = array_filter($form_state['values']['types']);
+  if (count($types) > 0) {
+    if($quick) {
+      // One of the goals of this module is to make deleting go faster. To do
+      // that we pre-calculate which module implement hook_delete.
+      $node_deletes = array();
+      foreach (module_list() as $module) {
+        foreach ($types as $type) {
+          $node = array('type' => $type);
+          $module = node_get_types('module', $node);
+          if ($module === 'node') {
+            $module = 'node_content'; // Avoid function name collisions.
+          }
+          if ($hook = module_hook($module, 'delete')) {
+            $node_deletes[] = $hook;
+          }
+        }
+      }
+    }
+    
+    $types = '"'. implode('", "', $types) .'"';
+    $result = db_query("SELECT nid FROM {node} WHERE type IN ($types)");
+    $operations = array();
+
+    // Doing an empty operation at the beginning makes the "initialization"
+    // phase go quickly
+    $operations[] = array('trim', array(''));
+
+    $count = 0;
+    while ($row = db_fetch_object($result)) {
+      $nids[] = $row->nid;
+      ++$count;
+      if ($count % 20 === 1) {
+        if($quick) {
+          $operations[] = array('bulkdelete_node_delete_quick', array($nids, $node_deletes));
+        }
+        else {
+          $operations[] = array('bulkdelete_node_delete_standard', array($nids, $node_deletes));
+        }
+        $nids = array();
+      }
+    }
+    // Add remaining nids.
+    if($quick) {
+      $operations[] = array('bulkdelete_node_delete_quick', array($nids, $node_deletes));
+    }
+    else {
+      $operations[] = array('bulkdelete_node_delete_standard', array($nids, $node_deletes));
+    }
+
+    // Clear the cache once at the end.
+    $operations[] = array('cache_clear_all', array());
+
+    // How many operations are we going to do?
+    $count2 = count($operations);
+
+    // Set up the Batch API
+    $batch = array(
+      'operations' => $operations,
+      'finished' => '',
+      'title' => t('Deleting !count nodes in !count2 operations.', array('!count' => $count, '!count2' => $count2)),
+    );
+    batch_set($batch);
+    batch_process();
+  }
+}
+
+function bulkdelete_node_delete_quick($nids, $node_deletes = array()) {
+  foreach ($nids as $nid) {
+    // Reset the static cache to keep memory down.
+    $node = node_load($nid, NULL, TRUE);
+
+    // Note that the user calling this has administer nodes privileges, and
+    // can thus delete without an access check.
+
+    // Call the node-specific callback (if any):
+    foreach ($node_deletes as $function) {
+      $function($node);
+    }
+    db_query('DELETE FROM {node} WHERE nid = %d', $node->nid);
+    db_query('DELETE FROM {node_revisions} WHERE nid = %d', $node->nid);
+
+    if (module_exists('search')) {
+      search_wipe($row->nid, 'node');
+    }
+  }
+}
+
+function bulkdelete_node_delete_standard($nids) {
+  foreach ($nids as $nid) {
+    node_delete($nid);
+  }
+}

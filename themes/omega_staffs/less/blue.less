@@ -1,0 +1,86 @@
+/* ###### declare variables ###### */
+
+
+/* colours */
+
+
+@dark_blue: #2341ce;
+@light_blue : #a8cdfc;
+@very_light_blue: #f2fdfb;
+
+
+@blue: #00709e; /* pantone 383c */
+@mid_blue: #0290ca;
+
+
+/* typography */
+
+
+@font-family-custom: Verdana, "Helvetica Neue", Helvetica, Arial, Sans-serif;  /* client requested Verdana */
+
+
+
+#page * {
+	font-family: @font-family-custom;
+}
+
+
+#menu ul {
+
+	li.selected,
+	li.active {
+	
+		a,
+		a:visited,
+		a:active,
+		a:hover,
+		a:visited:hover {
+			background: url(../images/menu-selected-blue.jpg) 0 0  repeat-x;
+			border-left: 1px solid @blue;
+			border-right: 1px solid @blue;
+		}
+	}
+	
+}
+
+
+
+#banner {
+	background: @blue url(../images/banner-background-blue.jpg) repeat-x;
+}
+
+#preface-wrapper {
+	background: url(../images/title-background-blue.jpg) bottom left no-repeat;
+
+}
+
+
+
+.ribbon {
+	background: transparent url(../images/ribbon-blue.png) 0 0 no-repeat;
+}
+
+#main-wrapper h1.title {
+	background: url(../images/split-background-blue.jpg) 0 0repeat-x;
+	}
+	
+	
+	
+/* ##### forms and form elements #### */
+
+input.form-submit {
+	color: #fff;
+	background: @blue;
+	border: 1px solid @blue;
+	}
+	
+input.form-submit:hover {
+	background-color: @mid_blue;
+}	
+
+	
+/* ##### stockton-specific stuff ##### */
+	
+#content-bottom {
+	text-align: right;
+}
