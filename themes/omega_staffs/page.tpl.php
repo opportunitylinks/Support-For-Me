@@ -112,13 +112,12 @@
       <div id="main-wrapper" class="column <?php print $main_content_classes; ?>">
       	<div class="clearfix" id="top-wrapper">
         <?php if($content_top): ?>
-        <div id="content-top" class="grid-10 alpha">
+        <div id="content-top" class="grid-8 alpha">
           <?php print $content_top; ?>
         </div><!-- /#content-top -->
         <?php endif; ?>
-        
         <?php if($a_to_z): ?>
-        <div id="a-to-z" class="grid-6 omega">
+        <div id="a-to-z" class="grid-8 omega">
           <?php print $a_to_z; ?>
         </div><!-- /#a_to_z -->
         <?php endif; ?>
@@ -128,11 +127,9 @@
           <div id="content-tabs" class="clearfix"><?php print $tabs; ?></div><!-- /#content-tabs -->
         <?php endif; ?>
     
-        <!--DISABLED BECAUSE NOT NECESSARY
-	<?php if ($title && $title != "Search"): ?>
+        <?php if ($title): ?>
           <h1 class="title" id="page-title"><?php print $title; ?></h1>
         <?php endif; ?>
-	-->
     
         <div id="main-content" class="region clearfix">
           <?php print $content; ?>
