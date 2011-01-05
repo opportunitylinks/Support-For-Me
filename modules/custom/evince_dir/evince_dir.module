@@ -43,11 +43,16 @@ function evince_dir_menu() {
 }
 
 function evince_dir_search_results() {
+
+  /*DISABLED TO PREVENT DUPLICATE SEARCH BLOCKS
+
   $block = (object) module_invoke('evince_dir_search', 'block', 'view', 0); // $module, $hook, $args...
   unset($block->subject);
   $qs = '<div id="quicksearch">';
   $qs .= theme('block', $block);
   $qs .= '</div>';
+
+  END OF DISABLE*/
 
   $block = (object) module_invoke('evince_dir_search', 'block', 'view', 1); // $module, $hook, $args...
   unset($block->subject);

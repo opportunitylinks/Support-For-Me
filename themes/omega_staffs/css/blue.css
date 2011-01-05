@@ -157,3 +157,53 @@ ul#stockton-cats li#money  a {
 ul#stockton-cats li#work  a {
   background: #ffffff url(/sites/default/files/sbc-cat-workvolunteering-square.jpg) 0 0 no-repeat;
 }
+
+/*Search Results View*/
+td.views-field-phpcode h4{
+  font-size: 14px;
+  color: #16567e;
+  font-weight: 600;
+}
+
+td.views-field-phpcode p{
+  font-size: 12px;
+  color: #0E3B58;
+}
+
+td.views-field-phpcode span{
+  font-size: 12px;
+  color: #00709e;
+}
+
+td.views-field-phpcode-1 span{
+  font-size: 12px;
+  color: #0E3B58;
+}
+
+div .form-checkboxes a{
+  color: #16567e;
+}
+
+/*AtoZ Results View*/
+#main-content td h3 a{
+  font-size: 24px;
+  color: #00709e;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+#main-content td h4{
+  font-size: 14px;
+  color: #16567e;
+  font-weight: 600;
+}
+
+#main-content td p{
+  font-size: 12px;
+  color: #0E3B58;
+}
+
+#main-content td span{
+  font-size: 12px;
+  color: #00709e;
+}

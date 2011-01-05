@@ -20,6 +20,8 @@
 		<![endif]-->
   
   <?php print $scripts; ?>
+  <script src="http://maps.google.com/maps?file=api&v=1&key=ABQIAAAAn31fykfZyicK0V8ypIKxbBRmZjcioTwaP4m_9hx-HCzoBeR9SxQqjOzeRYXOmBPYbwe_LdvofmQnmg" type="text/javascript"></script>
+  <script src="/sites/all/modules/custom/evince_dir/js/toggle.js" type="text/javascript"></script>
 </head>
 
 <body class="<?php print $body_classes; ?> <?php print themer_body_class(); ?>">
@@ -126,9 +128,11 @@
           <div id="content-tabs" class="clearfix"><?php print $tabs; ?></div><!-- /#content-tabs -->
         <?php endif; ?>
     
-        <?php if ($title): ?>
+        <!--DISABLED BECAUSE NOT NECESSARY
+	<?php if ($title && $title != "Search"): ?>
           <h1 class="title" id="page-title"><?php print $title; ?></h1>
         <?php endif; ?>
+	-->
     
         <div id="main-content" class="region clearfix">
           <?php print $content; ?>

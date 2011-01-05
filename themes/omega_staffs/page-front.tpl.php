@@ -120,9 +120,11 @@
           <div id="content-tabs" class=""><?php print $tabs; ?></div><!-- /#content-tabs -->
         <?php endif; ?>
     
+	<!--DISABLED BECAUSE NOT NECESSARY
         <?php if ($title): ?>
           <h1 class="title" id="page-title"><?php print $title; ?></h1>
         <?php endif; ?>
+	-->
     
         <div id="main-content" class="region clearfix">
           <?php print $content; ?>

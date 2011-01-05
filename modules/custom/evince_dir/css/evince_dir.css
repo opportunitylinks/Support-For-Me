@@ -12,7 +12,7 @@ div#filters {
 }
 
 
-div#tabbed {
+div#tabbed {/*Record View*/
   float: right;
   width: 600px;
   overflow: hidden;
@@ -31,8 +31,101 @@ ul#tablinks li.active {
 div.sfmtab {
   clear: left;
   border: 1px solid #999;
+}td.views-field-phpcode span{/*Record View*/
+  font-size: 12px;
+  color: #00709e;
 }
 div#numentries {
   float: right;
 }
 
+/*Search Results View*/
+td.views-field-phpcode-1 {
+  width: 100px;
+}
+
+td.views-field-phpcode h3{
+  margin: 0 0 0 0;/*Record View*/
+}
+
+td.views-field-phpcode h4{
+  margin: 0 0 10px 0;
+}
+
+td.views-field-phpcode p{
+  margin: 0 0 10px 0;
+}
+
+div .form-checkboxes a{
+  text-decoration: none;
+  font-size: 12px;
+}
+
+/*AtoZ Results View*/
+
+#edart h3{
+  margin: 0 0 -5px 0;
+}
+
+#edart h4{
+  margin: 0 0 10px 0;
+}
+
+#edart p{
+  margin: 0 0 10px 0;
+}
+
+/*Record View*/
+
+#addsection {
+  float: left;
+  width: 400px;
+  margin: 20px 0 0 0;
+}
+
+#map_canvas {
+  float: right;
+  margin: 30px 0 0 0;
+}
+
+#record h3{
+  margin: 0;	
+}
+
+#record .more h3{
+  margin: 0 0 10px 0;
+}
+
+.back-to-search {
+  margin: 30px 0 0 0;
+}
+
+.sect {
+  margin: 0 0 0 0;
+}
+
+.sect h6{
+  margin: 0 10px 0 0;
+  color: #16567e;
+  float: left;	
+}
+
+.sect span.heading {
+  margin: 0 10px 0 0;
+  color: #16567e;
+  float: left;
+  font-weight: bold;
+}
+
+.addblock {
+  margin: 0 0 30px 0;
+}
+
+.clearmap {
+  clear: both;
+  height: 20px;
+}
+
+span.small {
+  font-size: 10px;
+}

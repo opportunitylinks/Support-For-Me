@@ -8,6 +8,7 @@
  */
 
 include_once(drupal_get_path('module', 'evince_dir') .'/include/evince_dir_record.inc');
+drupal_add_css(drupal_get_path('module', 'evince_dir') .'/css/evince_dir.css');
 
 /**
  * Implementation of hook_menu().
@@ -105,23 +106,29 @@ function evince_dir_atoz_page_atoz($start_char = NULL, $start_record = 0) {
 
   $model_name = 'http://opp-links.org.uk/XMLSchema/AtomModel';
   $output_list = array();
+  $type;
 
   foreach ($results['entries'] as $item) {
     $subitem = $item['content'][0]['child'][$model_name]['model'][0]['child'][$model_name];
     $record_id = $subitem['recordid'][0]['data'];
     $record_type = $subitem['recordtype'][0]['data'];
-    $name = html_entity_decode($item['title'], ENT_QUOTES);;
-    $summary = html_entity_decode($item['description'], ENT_QUOTES);
+    $name = $item['title'];
+    $summary = htmlspecialchars_decode($item['description'], ENT_QUOTES);
     $location = $item['location'];
     $contact = $item['contact'];
-		if (is_numeric(substr($contact,0,1))) {
-			$contact=format_telfax2($contact);
-		}
+
+    if($record_type == "ascservices") {
+	$type = "Service";
+    } else { 
+	if($record_type == "ascserviceproviders") {
+	    $type = "Service Provider";
+	}
+    }
+
     $output_list[] = array(
-     '#title' => l($name, 'evince/dir/atoz/'. $start_char . '/' . $record_type . '/' . $record_id),
-     '#summary' => $summary,
-     '#location' => $location,
-     '#contact' => $contact,
+     '#service' => "<h3>" . l($name, 'evince/dir/atoz/'. $start_char . '/' . $record_type . '/' . $record_id) . 
+	"</h3>" . "<h4>" . $location . "</h4>" . "<p>" . $summary . "</p>" . "<span>" . $contact . "</span>",
+     '#type' => "<span>" . $type . "</span>",
     );
   }
 
@@ -145,7 +152,7 @@ function evince_dir_atoz_page_atoz($start_char = NULL, $start_record = 0) {
   $output = "<div id='edart'>" . $output . '</div>';
 */
 
-  $hdrs = array('Title', 'Summary', 'Location', 'Contact');
+  $hdrs = array('Service/Organisation', 'Type');
   $output = $maxrecs . ' results for '. $start_char . theme('table', $hdrs, $output_list);
   $output = $links .'<div id="edart">' . $output . '</div>';
 

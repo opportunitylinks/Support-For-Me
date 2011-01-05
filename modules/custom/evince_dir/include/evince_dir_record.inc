@@ -22,24 +22,10 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
   }
   global $user;
   if ($user->uid) {
-    dsm($data->data, "Record data");
-
-  
+    dsm($data);
   }
   $xml = new SimpleXMLElement($data->data);
   $xml = (array)$xml;
-  
-  if ($record_type=="ascserviceproviders"){
-  	$allservices = (array)$xml['Services'];
-  	$services = (array)$allservices['Service'];
-		for($i=0; $i<count($services); $i++) {
-			$services_provided[$i] = $services[$i][1];
-		}
-		dsm ($services_provided, "Services provided...");
-    $services_provided = implode('<br />', $services_provided);
-  	
-  }
-  
   $title = $xml['DC.Title'];
 
   $description = (array)$xml['DC.Description'][1];
@@ -96,12 +82,12 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
     $website_address = (substr(ltrim($website_address), 0, 7) != 'http://' ? 'http://' : '') . $website_address;
   }
   $contacts = array();
-  $contacts[] = 'Telephone: '. $contact_number;
+  $contacts[] = '<span class="heading">Telephone:</span> '. $contact_number;
   if ($email_address) {
-    $contacts[] = 'Email: <a href="mailto:'. $email_address .'">' . $email_address . '</a>';
+    $contacts[] = '<span class="heading">Email:</span> <a href="mailto:'. $email_address .'">' . $email_address . '</a>';
   }
   if ($website_address) {
-    $contacts[] = 'Web: <a href="'. $website_address .'">'. $website_address . '</a>';
+    $contacts[] = '<span class="heading">Web:</span> <a href="'. $website_address .'">'. $website_address . '</a>';
   }
   if (empty($contacts)) {
     $contacts[]='';
@@ -251,121 +237,95 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
     }
   } 
   
-  if (!empty($xml['Costs'])) { 
-  	//dsm("Found ".count($xml['Costs'])." other costs...");   
+  if (!empty($xml['Costs'])) {    
 	  $othercosts = array();
     $other_costs = (array)$xml['Costs'];
-    $cost_types = (array)$other_costs['CostType'];
-    $cost_values = (array)$other_costs['Cost'];
-		for($i=0; $i<count($cost_types); $i++) {
-			$othercosts[$i] = "&pound;".number_format($cost_values[$i]). " ".$cost_types[$i];
-		}
+    foreach ($other_costs as $cost_detail) {
+    	$othercosts[] = "&pound;". number_format($cost_detail->Cost). " " . $cost_detail->CostType;
+    }
     $othercosts = implode('<br />', $othercosts);
+    dsm($othercosts);
 	}
 
 
 //Build output array
 //++++++++++++++++++
 
-  $output .= '<h2>'. $title .'</h2>';
-  $output .= '<p>'. $description .'</p>';
+  $output .='<div id="record">';
+  $output .= '<h1>'. $title .'</h1>';
+  $output .= '<div class="desc">'. $description .'</div>';
   if ($address) {
-    $hdr = array('Address');
-    $row = array();
-    $row[] = array(
-      '#address' => $address,
-    );
-    $output .= "<div class='addblock'>" . theme('table', $hdr, $row) . "</div>";
-    $output .= "<div id='map_canvas' style='width: 100%; height: 100%'></div>";
+    $output .= "<div id='addsection'><div class='sect addblock'><h3>Address</h3>" . $address . "</div><div class='sect conblock'><h3>Contact</h3>" . $contacts . "</div></div>";
   }
-  if ($contacts) {
-    $hdr = array('Contact');
-    $row = array();
-    $row[] = array(
-     '#contacts' => $contacts,
+  if ($longitude && $latitude) {
+    $output .= "<div id='map_canvas' style='width: 500px; height: 300px'></div><script type=\"text/javascript\">
+    //<![CDATA[
+    var map = new GMap(document.getElementById(\"map_canvas\"));
+    var service = new GPoint(" . $longitude . "," . $latitude . ");
+    var stocktonIcon = new GIcon(G_DEFAULT_ICON);
+        stocktonIcon.image = '/sites/all/modules/gmap/markers/custom/stockton.png';
+        stocktonIcon.iconSize = new GSize(20, 34);
+        stocktonIcon.iconAnchor = new GPoint(10, 34);
+        stocktonIcon.infoWindowAnchor = new GPoint(10, 3); 
+    var sfmIcon = new GIcon(G_DEFAULT_ICON);
+        sfmIcon.image = '/sites/all/modules/gmap/markers/custom/sfm-marker2.png';
+        sfmIcon.iconSize = new GSize(19, 50);
+        sfmIcon.iconAnchor = new GPoint(10, 50);
+        sfmIcon.infoWindowAnchor = new GPoint(10, 10); 
+    var markerOptions = { icon:sfmIcon };
+    var marker = new GMarker(service, markerOptions);
+    GEvent.addListener(marker, \"click\",
+      function() {
+         marker.openInfoWindowHtml(\"<strong>" . $title . "</strong><br /><span class='small'>" . $address . "</span>\");
+      }
     );
-    $output .= "<div class='conblock'>" . theme('table', $hdr, $row) . "</div>";
+    map.addOverlay(marker);
+    map.addControl(new GSmallMapControl());
+    map.centerAndZoom(service, 2);
+    //]]>
+    </script>";
   }
+  $output .= "<div class='clearmap'></div>";
+  $output .= '<div class="more"><h3>More Information</h3></div>';
   if ($agerange) {
-    $hdr = array('Age Range');
-    $row = array();
-    $row[] = array(
-      '#agerange' => $agerange,
-    );
-    $output .= "<div class='agerange'>" . theme('table', $hdr, $row) . "</div>";
+    $output .= "<div class='sect agerange'><span class='heading'>Age Range:</span><p>" . $agerange . "</p></div>";
   }
 
   if ($eligible) {
-    $hdr = array('Eligibility');
-    $row = array();
-    $row[] = array(
-      '#details' => $eligible,
-    );
-    $output .= "<div class='eligible'>" . theme('table', $hdr, $row) . "</div>";
+    $output .= "<div class='sect eligible'><span class='heading'>Eligible:</span><p>" . $elgigble . "</p></div>";
   }
 
   if ($referproc) {
-    $hdr = array('Referral Criteria');
-    $row = array();
-    $row[] = array(
-      '#details' => $refer,
-      '#procedure' => $referproc,
-    );
-    $output .= "<div class='refer'>" . theme('table', $hdr, $row) . "</div>";
+    $output .= "<div class='sect refer'><span class='heading'>Referral Criteria:</span><p>" . $refer . $referproc . "</p></div>";
   }
 
   if ($sprov) {
-    $hdr = array('Special Provisions');
-    $row = array();
-    $row[] = array(
-      '#details' => $sprov,
-    );
-    $output .= "<div class='provides'>" . theme('table', $hdr, $row) . "</div>";
+    $output .= "<div class='sect provides'><span class='heading'>Special Provisions:</span><p>" . $sprov . "</p></div>";
   }
 
   if ($notes) {
-    $hdr = array('Notes');
-    $row = array();
-    $row[] = $notes;
-    $output .= "<div class='notes'>" . theme('table', $hdr, $row) . "</div>";
+    $output .= "<div class='sect notes'><span class='heading'>Notes:</span><p>" . $notes . "</p></div>";
   }
 
   if ($costs) {
-    $hdr = array('Costs');
-    $row = array();
-    $row[] = $costs;
-    $output .= "<div class='costs'>" . theme('table', $hdr, $row) . "</div>";
+    $output .= "<div class='sect costs'><span class='heading'>Costs:</span><p>" . $costs . "</p></div>";
   }
   
   if ($othercosts) {
-    $hdr = array('Costs');
-    $row = array();
-    $row[] = array(
-    	'#costs' => $othercosts,
-    );
-    $output .= "<div class='costs'>" . theme('table', $hdr, $row) . "</div>";
+    $output .= "<div class='sect costs'><span class='heading'>Other Costs:</span><p>" . $othercosts . "</p></div>";
   }
 
   if ($availability) {
-    $hdr = array('Availability');
-    $row = array();
-    $row[] = array(
-      '#avail' => $availability,
-    );
-    $output .= "<div class='availability'>" . theme('table', $hdr, $row) . "</div>";
+    $output .= "<div class='sect availability'><span class='heading'>Availability:</span><p>" . $availability . "</p></div>";
   }
-
 
   if ($availability2) {
-    $hdr = array('Availability');
-    $row = array();
-    $row[] = array(
-      '#avail2' => $availability2,
-    );
-    $output .= "<div class='availability'>" . theme('table', $hdr, $row) . "</div>";
+    $output .= "<div class='sect availability'><span class='heading'>Availability:</span><p>" . $availability2 . "</p></div>";
   }
 
-  $output .= "<p class='back-to-search'><< Go back to <a href='/evince/dir?$ref&page=$page'><strong>your search results</strong></a></p>";
+  $output .= "<div class='back-to-search'><< Go back to <a href='/evince/dir?$ref&page=$page'><strong>your search results</strong></a></p></div>";
+
+  $output .= '</div>';
   return $output;
 }
 

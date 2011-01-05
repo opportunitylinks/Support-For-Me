@@ -102,6 +102,12 @@ function evince_dir_search_quicksearch_form(&$form_state = NULL) {
     '#name' => 'submit-qs',
   );
 
+  if ($quick_search) {
+    $form['search']['new-search'] = array(
+      '#type' => 'markup',
+      '#value' => '<div id="new-search"><a href="/evince/dir/new">Start New Search</a></div>',
+    );
+  };
   return $form;
 }
 
@@ -123,13 +129,13 @@ function evince_dir_search_filters_form(&$form_state = NULL) {
 
   $form['proximity'] = array(
     '#type' => 'fieldset',
-    '#title' => 'Proximity',
+    '#title' => 'Location',
     '#attributes' => array('id' => 'proximity'),
   );
 
   $form['proximity']['postcode'] = array(
     '#type' => 'textfield',
-    '#title' => 'Please enter your full postcode',
+    '#title' => 'Postcode',
     '#size' => 10,
     '#name' => 'postcode',
     '#default_value' => $proximity['#postcode'],
@@ -147,7 +153,7 @@ function evince_dir_search_filters_form(&$form_state = NULL) {
 
   $form['proximity']['submit-proximity'] = array(
     '#type' => 'submit',
-    '#value' => t('Filter Results'),
+    '#value' => t('Update'),
     '#name' => 'submit-proximity',
     '#weight' => 15,
   );
@@ -164,7 +170,7 @@ function evince_dir_search_filters_form(&$form_state = NULL) {
       $form['fs-filters']['filters'][$fname] = array(
         '#type' => 'checkboxes',
         '#weight' => 20,
-        '#title' => $fname == 'fdctype' ? 'Type' : 'Location',
+        '#title' => $fname == 'fdctype' ? 'Type' : 'Area',
         '#options' => array_flip($fvals),
         '#default_value' => (array)$filter_values[$fname],
       );
@@ -172,7 +178,7 @@ function evince_dir_search_filters_form(&$form_state = NULL) {
 
     $form['fs-filters']['submit-filter'] = array(
       '#type' => 'submit',
-      '#value' => t('Filter Results'),
+      '#value' => t('Update'),
       '#name' => 'submit-filters',
       '#weight' => 30,
     );
