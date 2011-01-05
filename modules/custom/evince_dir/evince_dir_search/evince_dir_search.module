@@ -102,12 +102,6 @@ function evince_dir_search_quicksearch_form(&$form_state = NULL) {
     '#name' => 'submit-qs',
   );
 
-  if ($quick_search) {
-    $form['search']['new-search'] = array(
-      '#type' => 'markup',
-      '#value' => '<div id="new-search"><a href="/evince/dir/new">Start New Search</a></div>',
-    );
-  };
   return $form;
 }
 
@@ -127,45 +121,37 @@ function evince_dir_search_filters_form(&$form_state = NULL) {
   $proximity = $search['proximity'];
   $found = variable_get('foundrecs', '');
 
-  $form['proximity'] = array(
-    '#type' => 'fieldset',
-    '#title' => 'Location',
-    '#attributes' => array('id' => 'proximity'),
-  );
+  
 
-  $form['proximity']['postcode'] = array(
-    '#type' => 'textfield',
-    '#title' => 'Postcode',
-    '#size' => 10,
-    '#name' => 'postcode',
-    '#default_value' => $proximity['#postcode'],
-    '#weight' => 10,
-  );
-
-  $form['proximity']['radius'] = array(
-    '#type' => 'textfield',
-    '#title' => 'Radius (miles)',
-    '#size' => 2,
-    '#name' => 'radius',
-    '#default_value' => $proximity['#radius'],
-    '#weight' => 12,
-  );
-
-  $form['proximity']['submit-proximity'] = array(
-    '#type' => 'submit',
-    '#value' => t('Update'),
-    '#name' => 'submit-proximity',
-    '#weight' => 15,
-  );
-
-  if ($filters) {
     $form['fs-filters'] = array(
       '#type' => 'fieldset',
       '#title' => 'Filters',
       '#attributes' => array('id' => 'fs-filters'),
     );
 
+  $form['fs-filters']['postcode'] = array(
+    '#type' => 'textfield',
+    '#weight' => '-2',
+    '#title' => 'Full postcode',
+    '#size' => 10,
+    '#name' => 'postcode',
+    '#default_value' => $proximity['#postcode'],
+    
+  );
 
+  $form['fs-filters']['radius'] = array(
+    '#type' => 'select',
+    '#weight' => '-1',
+    '#title' => 'Radius (miles)',
+    '#name' => 'radius',
+    '#options' => array('2', '5', '10', '15', '20', '25'),
+    '#default_value' => $proximity['#radius'],
+
+  );
+
+
+
+  if ($filters) {
     foreach ((array)$filters as $fname => $fvals) {
       $form['fs-filters']['filters'][$fname] = array(
         '#type' => 'checkboxes',
@@ -174,7 +160,8 @@ function evince_dir_search_filters_form(&$form_state = NULL) {
         '#options' => array_flip($fvals),
         '#default_value' => (array)$filter_values[$fname],
       );
-    }
+     }
+    };
 
     $form['fs-filters']['submit-filter'] = array(
       '#type' => 'submit',
@@ -182,7 +169,7 @@ function evince_dir_search_filters_form(&$form_state = NULL) {
       '#name' => 'submit-filters',
       '#weight' => 30,
     );
-  };
+  
 
   return $form;
 }
