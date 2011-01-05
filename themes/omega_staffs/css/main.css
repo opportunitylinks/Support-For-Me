@@ -118,7 +118,7 @@ a.mail-link {
   padding-bottom: 10px;
 }
 #top-wrapper #content-top {
-  margin-bottom: 0;
+  margin-bottom: 0;10px
 }
 /* ###### preface stuff ###### */
 #preface-wrapper {
@@ -199,10 +199,20 @@ img.logo, img.shadow {
 .not-front #main-content {
   padding-bottom: 20px;
 }
-#a-to-z {
+#browse-category, #a-to-z {
   font-size: 1.4em;
   text-align: right;
 }
+
+div#a-to-z div.content p {
+display:inline;
+float:right;
+margin:0px 5px;
+
+}
+
+
+
 body.path-evince.path-dir #a-to-z {
   float: right;
 }
@@ -373,6 +383,20 @@ img.left, img.right {
   margin-bottom: 5px;
 }
 /* ###### quick search ###### */
+
+fieldset#fs-filters #edit-fs-filters-postcode-wrapper label, fieldset#fs-filters #edit-fs-filters-radius-wrapper label {
+  float:left;
+  width:105px;
+}
+
+fieldset#fs-filters #edit-fs-filters-postcode-wrapper #edit-fs-filters-postcode {
+  width:85px;
+}
+
+fieldset#fs-filters select#edit-fs-filters-radius {
+  width:93px;
+}
+
 fieldset#fs-search {
   padding: 0;
   border: 0;
@@ -383,12 +407,12 @@ fieldset#fs-search legend {
 }
 fieldset#fs-search .form-item {
   margin: 0;
-  width: 440px;
+  width: 326px;
   float: left;
   margin-right: 0;
 }
 fieldset#fs-search .form-text {
-  width: 438px;
+  width: 324px;
   font-size: 1.2em;
 }
 #quicksearch {
@@ -611,6 +635,7 @@ div#tabbed {
 #filters fieldset .form-item {
   margin-left: 10px;
   margin-right: 10px;
+  clear:both; /* Chris edit 22/12/10 */
 }
 #filters fieldset .form-item .form-item {
   margin-left: 0;
