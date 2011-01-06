@@ -12,10 +12,6 @@ h1, h2, h3{
 	font-weight: bold;
 }
 
-h2 {
-	font-size: 110%;
-}
-
 div.view-display-id-page_1 table td.views-field views-field-field-contact-value{
 	width: 100px;
 }
