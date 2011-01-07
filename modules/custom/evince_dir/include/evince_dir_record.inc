@@ -100,7 +100,6 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
 		$services = array();
 		$allservices = (array)$xml['Services'];
 		$servicesprovided = $allservices['Service'];
-		// echo "<p>Found ". count($servicesprovided). " service...</p>";
     $sane_title = "Service.DC.Title";
     foreach ($servicesprovided as $servicedetail) {
       $this_service=array($servicedetail);
@@ -111,8 +110,6 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
     	$services[] = "<a class='service_provided' href='$service_record'>" . (string) $this_service[0]->$sane_title . "</a>";
     }
     $services = implode('<br />', $services);
-
-    dsm($services);
   }
 
 //Provide link to service provider
@@ -122,11 +119,9 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
     
 		$service_provider_id = $xml['ServiceProviderIdentifier'];
 		$service_provider = $xml['ServiceProvider.DC.Title'];
-		//echo "<p>ID: $service_provider_id, $service_provider</p>";
     $pos = stripos($service_provider_id, "ascserviceproviders/");
 		$provider_record = "/evince/record/" . substr($service_provider_id, $pos);
 		$provided_by = "<a class='service_provider' href='$provider_record'>" . $service_provider . "</a>";
-    dsm($provided_by);
   }  
   
 
