@@ -97,31 +97,35 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
 //Provide links to services if service provider
 
   if ($record_type == 'ascserviceproviders') {
-    $services = array();
-    $allservices = (array)$xml['Services'];
-    $servicesprovided = $allservices['Service'];
-    $sane_title = "Service.DC.Title";
-    foreach ($servicesprovided as $servicedetail) {
-      $this_service=array($servicedetail);
-      // Extract ascservice record
-      $service_id = (string) $this_service[0]->ServiceIdentifier;
-      $pos = stripos($service_id, "ascservices/");
-      $service_record = "/evince/record/" . substr($service_id, $pos);
-      $services[] = "<a class='service_provided' href='$service_record'>" . (string) $this_service[0]->$sane_title . "</a>";
-    }
-    $services = implode('<br />', $services);
+	  $allservices = (array)$xml['Services'];
+	    if (!empty($allservices)) {
+			$services = array();
+	    $servicesprovided = $allservices['Service'];
+	    $sane_title = "Service.DC.Title";
+	    foreach ($servicesprovided as $servicedetail) {
+	      $this_service=array($servicedetail);
+	      // Extract ascservice record
+	      $service_id = (string) $this_service[0]->ServiceIdentifier;
+	      $pos = stripos($service_id, "ascservices/");
+	      $service_record = "/evince/record/" . substr($service_id, $pos);
+	      $services[] = "<a class='service_provided' href='$service_record'>" . (string) $this_service[0]->$sane_title . "</a>";
+	    }
+	    $services = implode('<br />', $services);
+		}
   }
 
 //Provide link to service provider
 
   if ($record_type == 'ascservices') {
-    $sane_title = "Service.DC.Title";
-    
     $service_provider_id = $xml['ServiceProviderIdentifier'];
-    $service_provider = $xml['ServiceProvider.DC.Title'];
-    $pos = stripos($service_provider_id, "ascserviceproviders/");
-    $provider_record = "/evince/record/" . substr($service_provider_id, $pos);
-    $provided_by = "<a class='service_provider' href='$provider_record'>" . $service_provider . "</a>";
+		if (!empty($service_provider_id)) {
+    	$sane_title = "Service.DC.Title";
+    	$service_provider_id = $xml['ServiceProviderIdentifier'];
+    	$service_provider = $xml['ServiceProvider.DC.Title'];
+    	$pos = stripos($service_provider_id, "ascserviceproviders/");
+    	$provider_record = "/evince/record/" . substr($service_provider_id, $pos);
+    	$provided_by = "<a class='service_provider' href='$provider_record'>" . $service_provider . "</a>";
+  	}
   }  
   
 
@@ -354,13 +358,13 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
   }
 
   if ($record_type == 'ascserviceproviders') {
-    if ($services) {
+    if (!empty($services)) {
       $output .= "<div class='sect services'><span class='heading'>Services provided:</span><p>" . $services . "</p></div>";
     }
   }
   
   if ($record_type == 'ascservices') {
-    if ($provided_by) {
+    if (!empty($provided_by)) {
       $output .= "<div class='sect provider'><span class='heading'>Service provided by:</span><p>" . $provided_by . "</p></div>";
     }
   }
