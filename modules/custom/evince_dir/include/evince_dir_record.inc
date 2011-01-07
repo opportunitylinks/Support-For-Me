@@ -99,7 +99,7 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
   if ($record_type == 'ascserviceproviders') {
 		$services = array();
 		$allservices = (array)$xml['Services'];
-		
+		if ($)
 		$servicesprovided = $allservices['Service'];
 		// echo "<p>Found ". count($servicesprovided). " service...</p>";
     $sane_title = "Service.DC.Title";
@@ -120,7 +120,7 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
 
   if ($record_type == 'ascservices') {
     $sane_title = "Service.DC.Title";
-
+    
 		$service_provider_id = $xml['ServiceProviderIdentifier'];
 		$service_provider = $xml['ServiceProvider.DC.Title'];
 		//echo "<p>ID: $service_provider_id, $service_provider</p>";
