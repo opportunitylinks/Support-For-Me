@@ -15,7 +15,7 @@ stylesheets[all][] = css/blue.css
 stylesheets[all][] = css/tipTip.css
 ; ------- Declare default javascript includes
 
-
+scripts[] = js/jquery.cookie.js
 scripts[] = js/jquery.tipTip.js
 scripts[] = js/glossy.js
 scripts[] = js/jquery.lazyload.mini.js

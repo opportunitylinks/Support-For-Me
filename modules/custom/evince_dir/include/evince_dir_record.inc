@@ -287,7 +287,7 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
 //++++++++++++++++++
 
   $output .='<div id="record">';
-  $output .= '<h1>'. $title .'</h1>';
+  $output .= '<h2>'. $title .'</h2>';
   $output .= '<div class="desc">'. $description .'</div>';
   if ($address) {
     $output .= "<div id='addsection'><div class='sect addblock'><h3>Address</h3>" . $address . "</div><div class='sect conblock'><h3>Contact</h3>" . $contacts . "</div></div>";
