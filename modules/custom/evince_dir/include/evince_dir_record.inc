@@ -34,37 +34,37 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
 
 //Address
   $address = (array)$contact_details['Address'];
-	if (!empty($address)) {
-	  // Get long and lat for Google maps...
-	  $gridref = (array)$address['GridReference'];
-	
-	  $bs7666_address = (array)$address['BS7666Address'];
-	
-	  $paon = (array)$bs7666_address['PAON'];
-	  $paon = $paon['Description'];
-	
-	  $street = $bs7666_address['StreetDescription'];
-	  $town = $bs7666_address['Town'];
-	  $post_town = $bs7666_address['PostTown'];
-	  $postcode = $bs7666_address['PostCode'];
-	  $address = NULL;
-	  if (is_numeric(substr($paon, 0, 1))) {
-	    $address = array();
-	    $address[] = $paon . " " . $street;;
-	  } 
-	  else {
-	    $address = array();
-	    $address[] = $paon;
-	    $address[] = $street;
-	  }
-	  if ($town) {
-	    $address[] = $town;
-	  }
-	  if ($post_town) {
-	    $address[] = $post_town;
-	  }
-	  $address[] = $postcode;
-	  $address = implode('<br />', $address);
+  if (!empty($address)) {
+    // Get long and lat for Google maps...
+    $gridref = (array)$address['GridReference'];
+  
+    $bs7666_address = (array)$address['BS7666Address'];
+  
+    $paon = (array)$bs7666_address['PAON'];
+    $paon = $paon['Description'];
+  
+    $street = $bs7666_address['StreetDescription'];
+    $town = $bs7666_address['Town'];
+    $post_town = $bs7666_address['PostTown'];
+    $postcode = $bs7666_address['PostCode'];
+    $address = NULL;
+    if (is_numeric(substr($paon, 0, 1))) {
+      $address = array();
+      $address[] = $paon . " " . $street;;
+    } 
+    else {
+      $address = array();
+      $address[] = $paon;
+      $address[] = $street;
+    }
+    if ($town) {
+      $address[] = $town;
+    }
+    if ($post_town) {
+      $address[] = $post_town;
+    }
+    $address[] = $postcode;
+    $address = implode('<br />', $address);
     $longitude = $gridref['Longitude'];
     $latitude = $gridref['Latitude'];
   } // End check for address
@@ -94,6 +94,41 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
   }
   $contacts = implode('<br />', $contacts);
 
+//Provide links to services if service provider
+
+  if ($record_type == 'ascserviceproviders') {
+	  $allservices = (array)$xml['Services'];
+	    if (!empty($allservices)) {
+			$services = array();
+	    $servicesprovided = $allservices['Service'];
+	    $sane_title = "Service.DC.Title";
+	    foreach ($servicesprovided as $servicedetail) {
+	      $this_service=array($servicedetail);
+	      // Extract ascservice record
+	      $service_id = (string) $this_service[0]->ServiceIdentifier;
+	      $pos = stripos($service_id, "ascservices/");
+	      $service_record = "/evince/record/" . substr($service_id, $pos);
+	      $services[] = "<a class='service_provided' href='$service_record'>" . (string) $this_service[0]->$sane_title . "</a>";
+	    }
+	    $services = implode('<br />', $services);
+		}
+  }
+
+//Provide link to service provider
+
+  if ($record_type == 'ascservices') {
+    $service_provider_id = $xml['ServiceProviderIdentifier'];
+		if (!empty($service_provider_id)) {
+    	$sane_title = "Service.DC.Title";
+    	$service_provider_id = $xml['ServiceProviderIdentifier'];
+    	$service_provider = $xml['ServiceProvider.DC.Title'];
+    	$pos = stripos($service_provider_id, "ascserviceproviders/");
+    	$provider_record = "/evince/record/" . substr($service_provider_id, $pos);
+    	$provided_by = "<a class='service_provider' href='$provider_record'>" . $service_provider . "</a>";
+  	}
+  }  
+  
+
 //Availability - to process [Period][Day] etc.
   $avail = (array)$xml['Availability'];
   $periods = (array)$avail['Period'];
@@ -113,25 +148,24 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
   $start = $avail['StartDateTime'];
   $end = $avail['EndDateTime'];
   if ($record_type == 'ascservices') {
-  if ($start && $start!='') {
-    $availability = array();
-    $ignore_repeats = FALSE;
-    if (strtok($start, ' ') == strtok($end, ' ')) {
-    $availability[] = date("D d/m/Y", strtotime($start));
-    $ignore_repeats = TRUE;
-    } 
-    else {
-      $availability[] = date("D d/m/Y", strtotime($start)) . ' to ' . date("D d/m/Y", strtotime($end));
+    if ($start && $start!='') {
+      $availability = array();
+      $ignore_repeats = FALSE;
+      if (strtok($start, ' ') == strtok($end, ' ')) {
+      $availability[] = date("D d/m/Y", strtotime($start));
+      $ignore_repeats = TRUE;
+      } 
+      else {
+        $availability[] = date("D d/m/Y", strtotime($start)) . ' to ' . date("D d/m/Y", strtotime($end));
+      }
+      if (strstr($start, 'T') == strstr($end, 'T')) {
+        $availability[] = 'All day';
+      } 
+      else {
+        $availability[] = 'From ' . date("ga", strtotime($start)) . ' to ' . date("ga", strtotime($end));
+      }
+      $availability = implode('<br />', $availability);
     }
-    if (strstr($start, 'T') == strstr($end, 'T')) {
-      $availability[] = 'All day';
-    } 
-    else {
-      $availability[] = 'From ' . date("ga", strtotime($start)) . ' to ' . date("ga", strtotime($end));
-    }
-    $availability = implode('<br />', $availability);
-  }
-
   }
   
 //Suitable Age Range
@@ -221,38 +255,38 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
   $notes = (array)$xml['Notes'];
 
 //Costs
-	if (!empty($xml['CostDetails'])) {    
-	  $costs = array();
+  if (!empty($xml['CostDetails'])) {    
+    $costs = array();
     $cost_details = (array)$xml['CostDetails'];
     //dsm($cost_details);
     $contact_for_costs = $cost_details['ContactForCosts'];
     $other_costs = $cost_details['OtherCosts'];
     if ($contact_for_costs == "false") {
       if ($cost_details['OtherCosts']) {
-     	  $costs[] = $cost_details['OtherCosts'];
-     	}
+        $costs[] = $cost_details['OtherCosts'];
+      }
     } 
-		if ($contact_for_costs == "true") {
-			$costs[] = "Please contact for details.";
+    if ($contact_for_costs == "true") {
+      $costs[] = "Please contact for details.";
     }
   } 
   
   if (!empty($xml['Costs'])) {    
-	  $othercosts = array();
+    $othercosts = array();
     $other_costs = (array)$xml['Costs'];
     foreach ($other_costs as $cost_detail) {
-    	$othercosts[] = "&pound;". number_format($cost_detail->Cost). " " . $cost_detail->CostType;
+      $othercosts[] = "&pound;". number_format($cost_detail->Cost). " " . $cost_detail->CostType;
     }
-    $othercosts = implode('<br />', $othercosts);
+    $othercosts = implode(', ', $othercosts);
     dsm($othercosts);
-	}
+  }
 
 
 //Build output array
 //++++++++++++++++++
 
   $output .='<div id="record">';
-  $output .= '<h1>'. $title .'</h1>';
+  $output .= '<h2>'. $title .'</h2>';
   $output .= '<div class="desc">'. $description .'</div>';
   if ($address) {
     $output .= "<div id='addsection'><div class='sect addblock'><h3>Address</h3>" . $address . "</div><div class='sect conblock'><h3>Contact</h3>" . $contacts . "</div></div>";
@@ -321,6 +355,18 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
 
   if ($availability2) {
     $output .= "<div class='sect availability'><span class='heading'>Availability:</span><p>" . $availability2 . "</p></div>";
+  }
+
+  if ($record_type == 'ascserviceproviders') {
+    if (!empty($services)) {
+      $output .= "<div class='sect services'><span class='heading'>Services provided:</span><p>" . $services . "</p></div>";
+    }
+  }
+  
+  if ($record_type == 'ascservices') {
+    if (!empty($provided_by)) {
+      $output .= "<div class='sect provider'><span class='heading'>Service provided by:</span><p>" . $provided_by . "</p></div>";
+    }
   }
 
   $output .= "<div class='back-to-search'><< Go back to <a href='/evince/dir?$ref&page=$page'><strong>your search results</strong></a></p></div>";
