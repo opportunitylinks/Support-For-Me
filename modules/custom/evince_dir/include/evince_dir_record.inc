@@ -94,6 +94,43 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
   }
   $contacts = implode('<br />', $contacts);
 
+//Provide links to services if service provider
+
+  if ($record_type == 'ascserviceproviders') {
+		$services = array();
+		$allservices = (array)$xml['Services'];
+		
+		$servicesprovided = $allservices['Service'];
+		// echo "<p>Found ". count($servicesprovided). " service...</p>";
+    $sane_title = "Service.DC.Title";
+    foreach ($servicesprovided as $servicedetail) {
+      $this_service=array($servicedetail);
+      // Extract ascservice record
+      $service_id = (string) $this_service[0]->ServiceIdentifier;
+      $pos = stripos($service_id, "ascservices/");
+      $service_record = "/evince/record/" . substr($service_id, $pos);
+    	$services[] = "<a class='service_provided' href='$service_record'>" . (string) $this_service[0]->$sane_title . "</a>";
+    }
+    $services = implode('<br />', $services);
+
+    dsm($services);
+  }
+
+//Provide link to service provider
+
+  if ($record_type == 'ascservices') {
+    $sane_title = "Service.DC.Title";
+
+		$service_provider_id = $xml['ServiceProviderIdentifier'];
+		$service_provider = $xml['ServiceProvider.DC.Title'];
+		//echo "<p>ID: $service_provider_id, $service_provider</p>";
+    $pos = stripos($service_provider_id, "ascserviceproviders/");
+		$provider_record = "/evince/record/" . substr($service_provider_id, $pos);
+		$provided_by = "<a class='service_provider' href='$provider_record'>" . $service_provider . "</a>";
+    dsm($provided_by);
+  }  
+  
+
 //Availability - to process [Period][Day] etc.
   $avail = (array)$xml['Availability'];
   $periods = (array)$avail['Period'];
@@ -113,25 +150,24 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
   $start = $avail['StartDateTime'];
   $end = $avail['EndDateTime'];
   if ($record_type == 'ascservices') {
-  if ($start && $start!='') {
-    $availability = array();
-    $ignore_repeats = FALSE;
-    if (strtok($start, ' ') == strtok($end, ' ')) {
-    $availability[] = date("D d/m/Y", strtotime($start));
-    $ignore_repeats = TRUE;
-    } 
-    else {
-      $availability[] = date("D d/m/Y", strtotime($start)) . ' to ' . date("D d/m/Y", strtotime($end));
-    }
-    if (strstr($start, 'T') == strstr($end, 'T')) {
-      $availability[] = 'All day';
-    } 
-    else {
-      $availability[] = 'From ' . date("ga", strtotime($start)) . ' to ' . date("ga", strtotime($end));
-    }
-    $availability = implode('<br />', $availability);
-  }
-
+  	if ($start && $start!='') {
+	    $availability = array();
+	    $ignore_repeats = FALSE;
+	    if (strtok($start, ' ') == strtok($end, ' ')) {
+	    $availability[] = date("D d/m/Y", strtotime($start));
+	    $ignore_repeats = TRUE;
+	    } 
+	    else {
+	      $availability[] = date("D d/m/Y", strtotime($start)) . ' to ' . date("D d/m/Y", strtotime($end));
+	    }
+	    if (strstr($start, 'T') == strstr($end, 'T')) {
+	      $availability[] = 'All day';
+	    } 
+	    else {
+	      $availability[] = 'From ' . date("ga", strtotime($start)) . ' to ' . date("ga", strtotime($end));
+	    }
+	    $availability = implode('<br />', $availability);
+	  }
   }
   
 //Suitable Age Range
@@ -243,7 +279,7 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
     foreach ($other_costs as $cost_detail) {
     	$othercosts[] = "&pound;". number_format($cost_detail->Cost). " " . $cost_detail->CostType;
     }
-    $othercosts = implode('<br />', $othercosts);
+    $othercosts = implode(', ', $othercosts);
     dsm($othercosts);
 	}
 
@@ -321,6 +357,18 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
 
   if ($availability2) {
     $output .= "<div class='sect availability'><span class='heading'>Availability:</span><p>" . $availability2 . "</p></div>";
+  }
+
+  if ($record_type == 'ascserviceproviders') {
+    if ($services) {
+      $output .= "<div class='services provided'><span class='heading'>Services provided:</span><p>" . $services . "</p></div>";
+    }
+  }
+  
+  if ($record_type == 'ascservices') {
+    if ($provided_by) {
+      $output .= "<div class='service provider'><span class='heading'>Service provided by:</span><p>" . $provided_by . "</p></div>";
+    }
   }
 
   $output .= "<div class='back-to-search'><< Go back to <a href='/evince/dir?$ref&page=$page'><strong>your search results</strong></a></p></div>";
