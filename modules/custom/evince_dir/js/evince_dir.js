@@ -40,38 +40,43 @@ $(document).ready(function(){
 
 	switch (sfmtabcontrol) {
 		case "sfmlist":
-
-				$("div.sfmtab").hide(); // Hides all div's using ".sfmtab" class.
-				$("div#sfmtablist").show(); // Shows "#sfmtablist" by default.
+				
+				$("div.sfmtab").hide();
 				$("ul#tablinks li").removeClass("active"); // Remove any current "active" class tabs 
+				$("div#sfmtablist").show(); // Shows "#sfmtablist" by default.
 				$(this).addClass("active"); // Add "active" class to current tab (#sfmtablist)
 				$.cookie('sfmtabcontrol', 'sfmlist');
 				break;
 
 		case "sfmcal":
-		
+				
 				$("div.sfmtab").hide();
-				$("div#sfmtabcal").show();
 				$("ul#tablinks li").removeClass("active");
+				$("div#sfmtabcal").show();
+
 				$(this).addClass("active");
 				$.cookie('sfmtabcontrol', 'sfmcal');
 				break;
 
 		case "sfmmap":
-
+				
+				$("div#sfmtablist").hide();
 				$("div.sfmtab").hide();
-				$("div#sfmtabmap").show();
 				$("ul#tablinks li").removeClass("active");
+				$("div#sfmtabmap").show();
 				$(this).addClass("active");
 				$.cookie('sfmtabcontrol', 'sfmmap');
 				break;
 				 
 
 		default:
-
+			
 				$("div#sfmtabcal").hide();
 				$("div#sfmtabmap").fadeOut('fast');   // forces a map resize on .show so displays correctly
+				$("div.sfmtab").show();
 				$("li#tabsfmlist").addClass("active");
 				$.cookie('sfmtabcontrol', 'sfmlist');
+
+
 	}
 });
