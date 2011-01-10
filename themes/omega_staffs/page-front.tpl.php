@@ -20,6 +20,23 @@
 		<![endif]-->
   
   <?php print $scripts; ?>
+
+<script type="text/javascript" charset="utf-8">
+  var is_ssl = ("https:" == document.location.protocol);
+  var asset_host = is_ssl ? "https://s3.amazonaws.com/getsatisfaction.com/" : "http://s3.amazonaws.com/getsatisfaction.com/";
+  document.write(unescape("%3Cscript src='" + asset_host + "javascripts/feedback-v2.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+
+<script type="text/javascript" charset="utf-8">
+  var feedback_widget_options = {};
+  feedback_widget_options.display = "overlay"; 
+  feedback_widget_options.company = "supportforme";
+  feedback_widget_options.placement = "right";
+  feedback_widget_options.color = "#64503d";
+  feedback_widget_options.style = "idea";
+  var feedback_widget = new GSFN.feedback_widget(feedback_widget_options);
+</script>
+
 </head>
 
 <body class="<?php print $body_classes; ?> <?php print themer_body_class(); ?>">
@@ -119,9 +136,11 @@
           <div id="content-tabs" class=""><?php print $tabs; ?></div><!-- /#content-tabs -->
         <?php endif; ?>
     
+	<!--DISABLED BECAUSE NOT NECESSARY
         <?php if ($title): ?>
           <h1 class="title" id="page-title"><?php print $title; ?></h1>
         <?php endif; ?>
+	-->
     
         <div id="main-content" class="region clearfix">
           <?php print $content; ?>

@@ -286,7 +286,7 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
 //++++++++++++++++++
 
   $output .='<div id="record">';
-  $output .= '<h2>'. $title .'</h2>';
+  $output .= '<h1>'. $title .'</h1>';
   $output .= '<div class="desc">'. $description .'</div>';
   if ($address) {
     $output .= "<div id='addsection'><div class='sect addblock'><h3>Address</h3>" . $address . "</div><div class='sect conblock'><h3>Contact</h3>" . $contacts . "</div></div>";
@@ -326,7 +326,7 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
   }
 
   if ($eligible) {
-    $output .= "<div class='sect eligible'><span class='heading'>Eligible:</span><p>" . $elgigble . "</p></div>";
+    $output .= "<div class='sect eligible'><span class='heading'>Eligible:</span><p>" . $eligible . "</p></div>";
   }
 
   if ($referproc) {
@@ -342,7 +342,12 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
   }
 
   if ($costs) {
-    $output .= "<div class='sect costs'><span class='heading'>Costs:</span><p>" . $costs . "</p></div>";
+    $output .= "<div class='sect costs'><span class='heading'>Costs:</span><p>";
+    foreach ($costs as $value) {
+      $output .= $value;
+      $output .= "<br />";
+    }
+    $output .= "</p></div>";
   }
   
   if ($othercosts) {
