@@ -79,4 +79,32 @@ $(document).ready(function(){
 
 
 	}
+
+	//Code for handling facet expand and contract
+	$('.form-checkboxes').each(function() {
+
+		var numOfFacets = 5;
+		var checkbox = $(this);
+		var hiddenElements = $('.form-item:gt('+ numOfFacets +')', this).hide();
+
+		var showCaption = '<a href="#">More (' + hiddenElements.size() + ')</a>';
+
+		if(hiddenElements.size() > 0) {
+			$(checkbox).append(
+				$(showCaption)
+				    .toggle(
+					function() { 
+					    hiddenElements.show(750, function(){});
+					    $(this).text('Fewer');
+					}, 
+					function() { 
+					    hiddenElements.hide(750, function(){});
+					    $(this).text('More (' + hiddenElements.size() + ')');
+					}
+				)
+			);
+		}
+
+	});	
+
 });
