@@ -40,38 +40,71 @@ $(document).ready(function(){
 
 	switch (sfmtabcontrol) {
 		case "sfmlist":
-
-				$("div.sfmtab").hide(); // Hides all div's using ".sfmtab" class.
-				$("div#sfmtablist").show(); // Shows "#sfmtablist" by default.
+				
+				$("div.sfmtab").hide();
 				$("ul#tablinks li").removeClass("active"); // Remove any current "active" class tabs 
+				$("div#sfmtablist").show(); // Shows "#sfmtablist" by default.
 				$(this).addClass("active"); // Add "active" class to current tab (#sfmtablist)
 				$.cookie('sfmtabcontrol', 'sfmlist');
 				break;
 
 		case "sfmcal":
-		
+				
 				$("div.sfmtab").hide();
-				$("div#sfmtabcal").show();
 				$("ul#tablinks li").removeClass("active");
+				$("div#sfmtabcal").show();
+
 				$(this).addClass("active");
 				$.cookie('sfmtabcontrol', 'sfmcal');
 				break;
 
 		case "sfmmap":
-
+				
+				$("div#sfmtablist").hide();
 				$("div.sfmtab").hide();
-				$("div#sfmtabmap").show();
 				$("ul#tablinks li").removeClass("active");
+				$("div#sfmtabmap").show();
 				$(this).addClass("active");
 				$.cookie('sfmtabcontrol', 'sfmmap');
 				break;
 				 
 
 		default:
-
+			
 				$("div#sfmtabcal").hide();
 				$("div#sfmtabmap").fadeOut('fast');   // forces a map resize on .show so displays correctly
+				$("div.sfmtab").show();
 				$("li#tabsfmlist").addClass("active");
 				$.cookie('sfmtabcontrol', 'sfmlist');
+
+
 	}
+
+	//Code for handling facet expand and contract
+	$('.form-checkboxes').each(function() {
+
+		var numOfFacets = 5;
+		var checkbox = $(this);
+		var hiddenElements = $('.form-item:gt('+ numOfFacets +')', this).hide();
+
+		var showCaption = '<a href="#">More (' + hiddenElements.size() + ')</a>';
+
+		if(hiddenElements.size() > 0) {
+			$(checkbox).append(
+				$(showCaption)
+				    .toggle(
+					function() { 
+					    hiddenElements.show(750, function(){});
+					    $(this).text('Fewer');
+					}, 
+					function() { 
+					    hiddenElements.hide(750, function(){});
+					    $(this).text('More (' + hiddenElements.size() + ')');
+					}
+				)
+			);
+		}
+
+	});	
+
 });
