@@ -119,6 +119,14 @@ div .form-checkboxes a{
   font-weight: bold;
 }
 
+.sect ul {
+  display:inline-block !important; display:block;
+  float:none !important; float:left;
+}
+.sect ul li {
+  list-style:none;
+}
+
 .addblock {
   margin: 0 0 30px 0;
 }
