@@ -102,6 +102,12 @@ function evince_dir_search_quicksearch_form(&$form_state = NULL) {
     '#name' => 'submit-qs',
   );
 
+  if ($quick_search) {
+    $form['search']['new-search'] = array(
+      '#type' => 'markup',
+      '#value' => '<div id="new-search"><a href="/evince/dir/new">Start New Search</a></div>',
+    );
+  };
   return $form;
 }
 
