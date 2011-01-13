@@ -118,11 +118,14 @@ div .form-checkboxes a{
   color: #16567e;
   float: left;
   font-weight: bold;
+  width:8em;
 }
 
-.sect ul {
+#main-content .sect ul {
   display:inline-block !important; display:block;
   float:none !important; float:left;
+  padding:0px !important;
+  margin:0px !important;
 }
 .sect ul li {
   list-style:none;
