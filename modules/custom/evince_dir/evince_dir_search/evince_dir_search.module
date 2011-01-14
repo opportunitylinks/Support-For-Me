@@ -115,7 +115,6 @@ function evince_dir_search_filters_form(&$form_state = NULL) {
 
   // if no saved search, no filters form needed
   $search = evince_dir_get_search();
-  $servoptions = array('service' => t('Service'), 'provider' => t('Service Provider'));
 
   if ($search == NULL) {
     return NULL;
@@ -128,11 +127,13 @@ function evince_dir_search_filters_form(&$form_state = NULL) {
   $proximity = $search['proximity'];
   $found = variable_get('foundrecs', '');
 
-  $form['fs-filters'] = array(
-    '#type' => 'fieldset',
-    '#title' => 'Filters',
-    '#attributes' => array('id' => 'fs-filters'),
-  );
+  
+
+    $form['fs-filters'] = array(
+      '#type' => 'fieldset',
+      '#title' => 'Filters',
+      '#attributes' => array('id' => 'fs-filters'),
+    );
 
   $form['fs-filters']['postcode'] = array(
     '#type' => 'textfield',
@@ -153,13 +154,8 @@ function evince_dir_search_filters_form(&$form_state = NULL) {
     '#default_value' => $proximity['#radius'],
 
   );
-  
-  $form['fs-filters']['type'] = array(
-    '#type' => 'checkboxes',
-    '#weight' => 0,
-    '#title' => 'Placeholder',
-    '#options' => $servoptions,
-  );
+
+
 
   if ($filters) {
     foreach ((array)$filters as $fname => $fvals) {
@@ -170,15 +166,15 @@ function evince_dir_search_filters_form(&$form_state = NULL) {
         '#options' => array_flip($fvals),
         '#default_value' => (array)$filter_values[$fname],
       );
-    }
-  };
+     }
+    };
 
-  $form['fs-filters']['submit-filter'] = array(
-    '#type' => 'submit',
-    '#value' => t('Update'),
-    '#name' => 'submit-filters',
-    '#weight' => 30,
-  );
+    $form['fs-filters']['submit-filter'] = array(
+      '#type' => 'submit',
+      '#value' => t('Update'),
+      '#name' => 'submit-filters',
+      '#weight' => 30,
+    );
 
   return $form;
 }
@@ -234,7 +230,6 @@ function evince_dir_search_filters_form_submit($form, &$form_state) {
   $quick_search = $search['quick_search'];
 
   $filters = $form_state['values']['fs-filters']['filters'];
-  $type = $form_state['values']['fs-filters']['type'];
 
   $proximity = array(
     '#latitude' => $form_state['values']['proximity']['latitude'],
@@ -242,23 +237,15 @@ function evince_dir_search_filters_form_submit($form, &$form_state) {
     '#radius' => $form_state['values']['proximity']['radius'],
     '#postcode' => $form_state['values']['proximity']['postcode'],
   );
-  evince_dir_search_get_search_results($quick_search, $filters, $proximity, $type);
+  evince_dir_search_get_search_results($quick_search, $filters, $proximity);
   unset($form_state['storage']);
   $form_state['redirect'] = 'evince/dir';
 }
 
-function evince_dir_search_get_search_results($quick_search, $filters, $proximity, $type) {
+function evince_dir_search_get_search_results($quick_search, $filters, $proximity) {
   $maxrec = variable_get('evince_dir_maxrec', '');
 
-  dsm($type);
-  if($type['service']!=NULL && $type['provider']!=NULL) {
-    $record_types = array('ascservices', 'ascserviceproviders');
-  } else if($type['service']!=NULL) {
-      $record_types = array('ascservices');
-    } else if($type['provider']!=NULL) {
-        $record_types = array('ascserviceproviders');
-      }
-
+  $record_types = array('ascservices', 'ascserviceproviders');
   $start = 0 ;
   $count = $maxrec; // take from admin page variable webmech 16/9/10 ola
   $url_sort = NULL;
@@ -276,6 +263,8 @@ function evince_dir_search_get_search_results($quick_search, $filters, $proximit
       }
     }
   }
+
+  dsm($url_filters);
 
   // save state of filter checkboxes for saving in search node later
   $search_filter_values = $filters;
