@@ -16,7 +16,7 @@ require_once('simplepie/simplepie.inc');
  */
 function evince_api_user($op, &$edit, $account, $category) {
   if ($op == 'logout') {
-    if (ini_get("session.use_cookies")) {
+    if (ini_get("session.use_Arraycookies")) {
       $params = session_get_cookie_params();
       setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
     }
@@ -307,7 +307,11 @@ function evince_api_category_info($category_id, $term_id) {
 }
 
 /**
- * evince_api_records_in_term
+ * evince_api_records_in_termforeach ((array)$filters as $filter) {
+    $filter_parts = explode(':', $filter);
+    $filter_parts[1] = urlencode($filter_parts[1]);
+    $query_parts[] = implode(':', $filter_parts);
+  }
  *
  * return records in a category term
  *
@@ -315,22 +319,39 @@ function evince_api_category_info($category_id, $term_id) {
  * $term_id	id of the category term
  *
  */
-function evince_api_records_in_term($category_id, $term_id) {
+function evince_api_records_in_term($category_id, $term_id, $filters) {
 
   $url_parts[] = variable_get('evince_api_url', '');
   $url_parts[] = variable_get('evince_api_snac', '');
-  $url_parts[] = 'public/search';
+  $url_parts[] = 'public/search/facet.atom';
 
   $query_parts[] = 'recordtype=ascservices';
   $query_parts[] = 'recordtype=ascserviceproviders';
+  $query_parts[] = 'facet=fdctype';
+  $query_parts[] = 'facet=fvillagetownname';
   $query_parts[] = $category_id .'_externaltermid='. $term_id;
   $marker = variable_get('evince_api_marker', '');
   if ($marker) {
     $query_parts[] = 'marker='. $marker;
   }
+
+  $query_parts[] = str_replace(' ', '+', $filters);
+
+  //dsm($filters);
+
+  /*foreach ((array)$filters as $filter) {
+    $filter_parts = explode(':', $filter);
+    $filter_parts[1] = urlencode($filter_parts[1]);
+    $query_parts[] = implode(':', $filter_parts);
+  }*/
+
   $query_parts[] = 'key='. variable_get('evince_api_api_key', '');
 
   $url = implode('/', $url_parts) .'?'. implode('&', $query_parts);
+
+  //$urlfix = str_replace(' ', '+', $url);
+
+  dsm($url);
 
   $headers = array();
   $method = 'GET';
@@ -349,6 +370,8 @@ function evince_api_records_in_term($category_id, $term_id) {
   }
   else {
     $results = evince_api_get_results_from_feed($feed);
+
+    $results['facets'] = $feed->get_feed_tags('http://opp-links.org.uk/XMLSchema/FacetResults', 'facets');
 
     $opensearch = $feed->get_channel_tags('http://a9.com/-/spec/opensearch/1.1/', 'totalResults');
     $results['opensearch']['totalResults'] = $opensearch[0]['data'];

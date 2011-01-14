@@ -31,7 +31,6 @@ ul#tablinks li.active {
 div.sfmtab {
   clear: left;
   border: 1px solid #999;
-  display:none;
 }
 td.views-field-phpcode span{/*Record View*/
   font-size: 12px;

@@ -58,7 +58,7 @@ function evince_dir_search_results() {
   unset($block->subject);
   $f = '<div id="filters">';
   $f .= theme('block', $block);
-  $f .= '</div>';
+  $f .= '</div>';  
 
   $search = evince_dir_get_search();
   $tabs = evince_dir_tabs($search['qs_count']);

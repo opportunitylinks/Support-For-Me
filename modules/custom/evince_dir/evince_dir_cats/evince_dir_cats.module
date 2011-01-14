@@ -123,6 +123,18 @@ function evince_dir_cats_walk_categories($terms, $category_id) {
  */
 function evince_dir_cats_category_info($category_id, $term_id) {
 
+  $url = request_uri();
+
+  $filterdetails = explode('/', $url);
+  if($filterdetails[6]==NULL) {
+    dsm('test');
+    unset($_SESSION['furl']);
+    unset($_SESSION['sform']);
+  } else {
+    $saved = $_SESSION['furl'];
+    $formsaved = $_SESSION['sform'];
+  }
+
   $data = evince_api_category_info($category_id, $term_id);
   $xml = new SimpleXMLElement($data->data);
   $xml = (array)$xml;
@@ -137,12 +149,22 @@ function evince_dir_cats_category_info($category_id, $term_id) {
   $parent_id = $parent->TermId;
   $parent_title = $parent->$title_name;
 
+  $url_filters = array();
+  foreach ((array)$filters as $filter) {
+    foreach ((array)$filter as $k => $v) {
+      if ($v) {
+        $url_filters[] = $v;
+      }
+    }
+  }
+
   if (!$parent_id) {
     $list['parent'] = '&laquo; Back to '. l($parent_id ? $parent_title : 'directory', 'directory');
   } 
   else {
     $list['parent'] = '&laquo; Back to '. l($parent_id ? $parent_title : 'directory', 'evince/dir/category/'. $category_id .'/'. $parent_id);
   }
+  evince_dir_delete_nodes();
   
   $list['term'] = $term_title;
 
@@ -156,7 +178,11 @@ function evince_dir_cats_category_info($category_id, $term_id) {
   
   $output = theme('item_list', $lists);
 
-  $results = evince_api_records_in_term($category_id, $term_id);
+  if($saved!=NULL) {
+    $results = evince_api_records_in_term($category_id, $term_id, $saved);
+  } else {
+    $results = evince_api_records_in_term($category_id, $term_id);
+  }
 
   if ($results['status'] != 'OK') {
     if ($results['status'] == 'not configured') {
@@ -177,11 +203,103 @@ function evince_dir_cats_category_info($category_id, $term_id) {
   foreach ($results['entries'] as $item) {
     evince_dir_create_node($item);
   }
+
+  $filters = $results['facets'][0]['child']['http://opp-links.org.uk/XMLSchema/FacetResults']['field'];
+
+  foreach ((array)$filters as $filter) {
+    $filter_values = $filter['child']['http://opp-links.org.uk/XMLSchema/FacetResults']['value'];
+    if (!empty($filter_values)) {
+      foreach ($filter_values as $value) {
+        $name = $value['attribs']['']['name'];
+        $qs = $value['attribs']['']['qs'];
+        $count = $value['data'];
+        $f[$filter['attribs']['']['name']][$name .' ('. $count .')'] = $qs;
+      }
+    }
+  }
+  
+  $hfrom['subject'] = 'Filters';
+  $hform['content'] = drupal_get_form('evince_dir_cats_form', $f);
+  $block = '<div id="filters">';
+  $block .= theme('block', (object)$hform);
+  $block .= '</div>';
+
   $num_entries = count($results['entries']);
 
   $output = evince_dir_tabs($num_entries);
 
-  return $output;
+  return $block . $output;
+}
+
+function evince_dir_cats_form(&$form_state = NULL, $filters) {
+ 
+  $f = $filters;
+
+  $form['#tree'] = TRUE; 
+
+  $form['fs-filters'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Filters',
+    '#attributes' => array('id' => 'fs-filters'),
+  );
+
+  if ($f) {
+    foreach ((array)$f as $fname => $fvals) {
+      $form['fs-filters']['filters'][$fname] = array(
+        '#type' => 'checkboxes',
+        '#weight' => 20,
+        '#title' => $fname == 'fdctype' ? 'Type' : 'Area',
+        '#options' => array_flip($fvals),
+        '#default_value' => (array)$filter_values[$fname],
+      );
+    }
+  };
+
+  $form['fs-filters']['submit-filter'] = array(
+    '#type' => 'submit',
+    '#value' => t('Update'),
+    '#name' => 'submit-filters',
+    '#weight' => 30,
+  );
+
+  if($_SESSION['sform']!=NULL) {
+    return $_SESSION['sform'];
+  }
+
+  return $form;
+}
+
+function evince_dir_cats_form_submit($form, &$form_state) {
+
+  $filters = $form_state['values']['fs-filters']['filters'];
+
+  $url = request_uri();
+  $url_parts = explode('/', $url);
+
+  $category_id = $url_parts[4];
+  $term_id = $url_parts[5];
+
+  $url_filters = array();
+  foreach ((array)$filters as $filter) {
+    foreach ((array)$filter as $k => $v) {
+      if ($v) {
+        $url_filters[] = $v;
+      }
+    }
+  }
+
+  $path = 'evince/dir/category/';
+  $path .= $category_id;
+  $path .= '/';
+  $path .= $term_id;
+
+  $urlfilt = implode('&', $url_filters);
+
+  $_SESSION['furl'] = $urlfilt;
+  $_SESSION['sform'] = $form;
+
+  unset($form_state['storage']);
+  $form_state['redirect'] = $path . '/filters';
 }
 
 function compare_catname($a, $b)
