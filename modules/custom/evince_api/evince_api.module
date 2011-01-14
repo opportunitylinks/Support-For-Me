@@ -325,8 +325,22 @@ function evince_api_records_in_term($category_id, $term_id, $filters) {
   $url_parts[] = variable_get('evince_api_snac', '');
   $url_parts[] = 'public/search/facet.atom';
 
-  $query_parts[] = 'recordtype=ascservices';
-  $query_parts[] = 'recordtype=ascserviceproviders';
+  $type = $_SESSION['ftype'];
+
+  if($type['service']!=NULL && $type['provider']!=NULL) {
+      $query_parts[] = 'recordtype=ascservices'; 
+      $query_parts[] = 'recordtype=ascserviceproviders';
+    } else if($type['service']!=NULL) {
+        $query_parts[] = 'recordtype=ascservices';
+      } else if($type['provider']!=NULL) {
+          $query_parts[] = 'recordtype=ascserviceproviders';
+        } else {
+						$query_parts[] = 'recordtype=ascservices';
+  					$query_parts[] = 'recordtype=ascserviceproviders';
+					}
+
+  //$query_parts[] = 'recordtype=ascservices';
+  //$query_parts[] = 'recordtype=ascserviceproviders';
   $query_parts[] = 'facet=fdctype';
   $query_parts[] = 'facet=fvillagetownname';
   $query_parts[] = $category_id .'_externaltermid='. $term_id;
