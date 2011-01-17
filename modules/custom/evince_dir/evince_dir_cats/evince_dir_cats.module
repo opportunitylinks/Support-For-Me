@@ -212,7 +212,7 @@ function evince_dir_cats_category_info($category_id, $term_id) {
         $name = $value['attribs']['']['name'];
         $qs = $value['attribs']['']['qs'];
         $count = $value['data'];
-        $f[$filter['attribs']['']['name']][$name .' ('. $count .')'] = $qs;
+        $f[$filter['attribs']['']['name']][$name] = $qs;
       }
     }
   }
