@@ -327,7 +327,7 @@ function evince_api_records_in_term($category_id, $term_id, $filters) {
 
   $type = $_SESSION['ftype'];
 
-  if($type['service']!=NULL && $type['provider']!=NULL) {
+  /*if($type['service']!=NULL && $type['provider']!=NULL) {
       $query_parts[] = 'recordtype=ascservices'; 
       $query_parts[] = 'recordtype=ascserviceproviders';
     } else if($type['service']!=NULL) {
@@ -337,12 +337,13 @@ function evince_api_records_in_term($category_id, $term_id, $filters) {
         } else {
 						$query_parts[] = 'recordtype=ascservices';
   					$query_parts[] = 'recordtype=ascserviceproviders';
-					}
+					}*/
 
-  //$query_parts[] = 'recordtype=ascservices';
-  //$query_parts[] = 'recordtype=ascserviceproviders';
+  $query_parts[] = 'recordtype=ascservices';
+  $query_parts[] = 'recordtype=ascserviceproviders';
   $query_parts[] = 'facet=fdctype';
   $query_parts[] = 'facet=fvillagetownname';
+  $query_parts[] = 'facet=recordtype';
   $query_parts[] = $category_id .'_externaltermid='. $term_id;
   $marker = variable_get('evince_api_marker', '');
   if ($marker) {

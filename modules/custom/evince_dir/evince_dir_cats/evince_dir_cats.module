@@ -127,9 +127,7 @@ function evince_dir_cats_category_info($category_id, $term_id) {
 
   $filterdetails = explode('/', $url);
   if($filterdetails[6]==NULL) {
-    dsm('test');
     unset($_SESSION['furl']);
-		unset($_SESSION['ftype']);
     unset($_SESSION['sform']);
   } else {
     $saved = $_SESSION['furl'];
@@ -182,7 +180,7 @@ function evince_dir_cats_category_info($category_id, $term_id) {
   if($saved!=NULL) {
     $results = evince_api_records_in_term($category_id, $term_id, $saved);
   } else {
-    $results = evince_api_records_in_term($category_id, $term_id);
+    $results = evince_api_records_in_term($category_id, $term_id, NULL);
   }
 
   if ($results['status'] != 'OK') {
@@ -235,7 +233,14 @@ function evince_dir_cats_category_info($category_id, $term_id) {
 function evince_dir_cats_form(&$form_state = NULL, $filters) {
  
   $f = $filters;
-  $servoptions = array('service' => t('Service'), 'provider' => t('Service Provider'));
+  $replace = array('ascservices', 'ascserviceproviders');
+  $with = array('Service', 'Service Providers');
+
+  foreach ((array)$f as $fname => $fvals) {
+    if($fname == 'recordtype') {
+      $f['recordtype'] = array_flip(str_replace($replace, $with, array_flip($fvals)));
+    }
+  }
 
   $form['#tree'] = TRUE; 
 
@@ -245,21 +250,14 @@ function evince_dir_cats_form(&$form_state = NULL, $filters) {
     '#attributes' => array('id' => 'fs-filters'),
   );
 
-  $form['fs-filters']['type'] = array(
-    '#type' => 'checkboxes',
-    '#weight' => 0,
-    '#title' => 'Placeholder',
-    '#options' => $servoptions,
-  );
-
   if ($f) {
     foreach ((array)$f as $fname => $fvals) {
       $form['fs-filters']['filters'][$fname] = array(
         '#type' => 'checkboxes',
         '#weight' => 20,
-        '#title' => $fname == 'fdctype' ? 'Type' : 'Area',
+        '#title' => ($fname == 'fdctype' ? 'Type' : ($fname == 'fvillagetownname' ? 'Area' : 'Placeholder')),
         '#options' => array_flip($fvals),
-        '#default_value' => (array)$filter_values[$fname],
+        '#default_value' => NULL,
       );
     }
   };
@@ -306,7 +304,6 @@ function evince_dir_cats_form_submit($form, &$form_state) {
   $urlfilt = implode('&', $url_filters);
 
   $_SESSION['furl'] = $urlfilt;
-	$_SESSION['ftype'] = $type;
   $_SESSION['sform'] = $form;
 
   unset($form_state['storage']);

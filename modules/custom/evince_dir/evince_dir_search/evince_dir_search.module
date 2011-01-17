@@ -127,13 +127,20 @@ function evince_dir_search_filters_form(&$form_state = NULL) {
   $proximity = $search['proximity'];
   $found = variable_get('foundrecs', '');
 
-  
+  $replace = array('ascservices', 'ascserviceproviders');
+  $with = array('Service', 'Service Providers');
 
-    $form['fs-filters'] = array(
-      '#type' => 'fieldset',
-      '#title' => 'Filters',
-      '#attributes' => array('id' => 'fs-filters'),
-    );
+  foreach ((array)$filters as $fname => $fvals) {
+    if($fname == 'recordtype') {
+      $filters['recordtype'] = array_flip(str_replace($replace, $with, array_flip($fvals)));
+    }
+  }
+
+  $form['fs-filters'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Filters',
+    '#attributes' => array('id' => 'fs-filters'),
+  );
 
   $form['fs-filters']['postcode'] = array(
     '#type' => 'textfield',
@@ -155,26 +162,24 @@ function evince_dir_search_filters_form(&$form_state = NULL) {
 
   );
 
-
-
   if ($filters) {
     foreach ((array)$filters as $fname => $fvals) {
       $form['fs-filters']['filters'][$fname] = array(
         '#type' => 'checkboxes',
         '#weight' => 20,
-        '#title' => $fname == 'fdctype' ? 'Type' : 'Area',
+        '#title' => ($fname == 'fdctype' ? 'Type' : ($fname == 'fvillagetownname' ? 'Area' : 'Placeholder')),
         '#options' => array_flip($fvals),
         '#default_value' => (array)$filter_values[$fname],
       );
-     }
-    };
+    }
+  };
 
-    $form['fs-filters']['submit-filter'] = array(
-      '#type' => 'submit',
-      '#value' => t('Update'),
-      '#name' => 'submit-filters',
-      '#weight' => 30,
-    );
+  $form['fs-filters']['submit-filter'] = array(
+    '#type' => 'submit',
+    '#value' => t('Update'),
+    '#name' => 'submit-filters',
+    '#weight' => 30,
+  );
 
   return $form;
 }
@@ -250,7 +255,7 @@ function evince_dir_search_get_search_results($quick_search, $filters, $proximit
   $count = $maxrec; // take from admin page variable webmech 16/9/10 ola
   $url_sort = NULL;
   $sort_order = NULL;   // will be relevance? maybe automatic?
-  $facets = array('fdctype', 'fvillagetownname');
+  $facets = array('fdctype', 'fvillagetownname', 'recordtype');
   $longitude = $proximity['#longitude'];
   $latitude = $proximity['#latitude'];
   $radius = $proximity['#radius'];
@@ -263,8 +268,6 @@ function evince_dir_search_get_search_results($quick_search, $filters, $proximit
       }
     }
   }
-
-  dsm($url_filters);
 
   // save state of filter checkboxes for saving in search node later
   $search_filter_values = $filters;
