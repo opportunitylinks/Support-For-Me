@@ -296,10 +296,12 @@ function evince_dir_cats_form_submit($form, &$form_state) {
     }
   }
 
+  $term_id = explode('?', $term_id);
+
   $path = 'evince/dir/category/';
   $path .= $category_id;
   $path .= '/';
-  $path .= $term_id;
+  $path .= $term_id[0];
 
   $urlfilt = implode('&', $url_filters);
 
