@@ -31,6 +31,10 @@ ul#tablinks li.active {
 div.sfmtab {
   clear: left;
   border: 1px solid #999;
+<<<<<<< HEAD
+=======
+ /* display:none; */
+>>>>>>> origin/master
 }
 td.views-field-phpcode span{/*Record View*/
   font-size: 12px;
@@ -87,6 +91,7 @@ div .form-checkboxes a{
 #map_canvas {
   float: right;
   margin: 30px 0 0 0;
+  border:1px solid #ccc;
 }
 
 #record h3{
@@ -116,6 +121,17 @@ div .form-checkboxes a{
   color: #16567e;
   float: left;
   font-weight: bold;
+  width:8em;
+}
+
+#main-content .sect ul {
+  display:inline-block !important; display:block;
+  float:none !important; float:left;
+  padding:0px !important;
+  margin:0px !important;
+}
+.sect ul li {
+  list-style:none;
 }
 
 .addblock {

@@ -108,9 +108,9 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
 	      $service_id = (string) $this_service[0]->ServiceIdentifier;
 	      $pos = stripos($service_id, "ascservices/");
 	      $service_record = "/evince/record/" . substr($service_id, $pos);
-	      $services[] = "<a class='service_provided' href='$service_record'>" . (string) $this_service[0]->$sane_title . "</a>";
+	      $services[] = "<li><a class='service_provided' href='$service_record'>" . (string) $this_service[0]->$sane_title . "</a></li>";
 	    }
-	    $services = implode('<br />', $services);
+	    $services = implode(' ', $services);
 		}
   }
 
@@ -124,7 +124,7 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
     	$service_provider = $xml['ServiceProvider.DC.Title'];
     	$pos = stripos($service_provider_id, "ascserviceproviders/");
     	$provider_record = "/evince/record/" . substr($service_provider_id, $pos);
-    	$provided_by = "<a class='service_provider' href='$provider_record'>" . $service_provider . "</a>";
+    	$provided_by = "<li><a class='service_provider' href='$provider_record'>" . $service_provider . "</a></li>";
   	}
   }  
   
@@ -286,7 +286,7 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
 //++++++++++++++++++
 
   $output .='<div id="record">';
-  $output .= '<h1>'. $title .'</h1>';
+  $output .= '<h2>'. $title .'</h2>';
   $output .= '<div class="desc">'. $description .'</div>';
   if ($address) {
     $output .= "<div id='addsection'><div class='sect addblock'><h3>Address</h3>" . $address . "</div><div class='sect conblock'><h3>Contact</h3>" . $contacts . "</div></div>";
@@ -342,12 +342,11 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
   }
 
   if ($costs) {
-    $output .= "<div class='sect costs'><span class='heading'>Costs:</span><p>";
+    $output .= "<div class='sect costs'><span class='heading'>Costs:</span><ul>";
     foreach ($costs as $value) {
-      $output .= $value;
-      $output .= "<br />";
+      $output .= "<li>" . $value . "</li>";
     }
-    $output .= "</p></div>";
+    $output .= "</ul></div>";
   }
   
   if ($othercosts) {
@@ -364,13 +363,13 @@ function evince_dir_display_record($record_type = NULL, $record_id = 0, $ref, $p
 
   if ($record_type == 'ascserviceproviders') {
     if (!empty($services)) {
-      $output .= "<div class='sect services'><span class='heading'>Services provided:</span><p>" . $services . "</p></div>";
+      $output .= "<div class='sect services'><span class='heading'>Services provided:</span><ul>" . $services . "</ul></div>";
     }
   }
   
   if ($record_type == 'ascservices') {
     if (!empty($provided_by)) {
-      $output .= "<div class='sect provider'><span class='heading'>Service provided by:</span><p>" . $provided_by . "</p></div>";
+      $output .= "<div class='sect provider'><span class='heading'>Service provided by:</span><ul>" . $provided_by . "</ul></div>";
     }
   }
 
