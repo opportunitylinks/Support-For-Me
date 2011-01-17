@@ -36,8 +36,14 @@ function check_postcode(&$to_check) {
   // Overseas Territories
   $pcexp[6] = '^([a-z]{4})(1zz)$/i';
 
-  // Load up the string to check, converting into lowercase
-  $postcode = strtolower($to_check);
+  // Expression for outer postcodes: AN, ANN, AAN, AANN.
+  $pcexp[7] = '^('. $alpha1 .'{1}'. $alpha2 .'{0,1}[0-9]{1,2})$';
+
+  // Expression for outer postcodes: ANA and AANA.
+  $pcexp[8] = '^('. $alpha1 .'{1}'. $alpha2 .'{0,1}[0-9]{1}' . $alpha3 . '{1})$';
+
+  // Load up the string to check, converting into lowercase and trim the leading and trailing white space
+  $postcode = trim(strtolower($to_check));
 
   // Assume we are not going to find a valid postcode
   $valid = FALSE;
@@ -63,9 +69,10 @@ function check_postcode(&$to_check) {
   // valid - (Webmech - but only the first part!)
   if ($valid) {
     $to_check = strtok($postcode, ' '); 
+    dsm('TRUE');
     return TRUE;
   } 
-  else return FALSE;
+  else dsm('FALSE'); return FALSE;
 }
 
 function get_lat_long($code) {
