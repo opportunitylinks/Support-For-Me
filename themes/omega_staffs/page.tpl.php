@@ -7,6 +7,7 @@
 
 <head>
   <title><?php print $head_title; ?></title>
+  <link rel="shortcut icon" href="/sites/all/themes/supportforme/favicon.ico" type="image/x-icon" />
   <?php print $head; ?>
   <?php print $styles; ?>
   <!--[if lte IE 7]>

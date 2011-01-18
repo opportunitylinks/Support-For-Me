@@ -31,7 +31,7 @@ div.view-display-id-page_1 table td.views-field views-field-field-contact-value{
   border-right: 1px solid #00709e;
 }
 #banner {
-  background: #00709e url(../images/banner-background-blue.jpg) repeat-x;
+  background: #e1e1e1 url(../images/banner-background-blue.jpg) repeat-x;
 }
 #preface-wrapper {
   background: url(../images/title-background-blue.jpg) bottom left no-repeat;
@@ -155,24 +155,24 @@ ul#stockton-cats li#work  a {
 }
 
 /*Search Results View*/
+td.views-field-phpcode {
+  font-size:1em;
+}
 td.views-field-phpcode h4{
-  font-size: 14px;
+  font-size: 0.894em;
   color: #16567e;
   font-weight: 600;
 }
 
 td.views-field-phpcode p{
-  font-size: 12px;
   color: #0E3B58;
 }
 
 td.views-field-phpcode span{
-  font-size: 12px;
   color: #00709e;
 }
 
 td.views-field-phpcode-1 span{
-  font-size: 12px;
   color: #0E3B58;
 }
 
@@ -182,24 +182,24 @@ div .form-checkboxes a{
 
 /*AtoZ Results View*/
 #main-content td h3 a{
-  font-size: 24px;
+  font-size: 1em;
   color: #00709e;
   font-weight: 600;
   text-decoration: underline;
 }
 
 #main-content td h4{
-  font-size: 14px;
+  font-size: 0.894em;
   color: #16567e;
   font-weight: 600;
 }
 
 #main-content td p{
-  font-size: 12px;
   color: #0E3B58;
+  font-size: 0.894em;
 }
 
 #main-content td span{
-  font-size: 12px;
   color: #00709e;
+  font-size: 0.894em;
 }
