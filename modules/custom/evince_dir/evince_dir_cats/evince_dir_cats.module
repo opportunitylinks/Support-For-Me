@@ -158,10 +158,10 @@ function evince_dir_cats_category_info($category_id, $term_id) {
   }
 
   if (!$parent_id) {
-    $list['parent'] = '&laquo; Back to '. l($parent_id ? $parent_title : 'directory', 'directory');
+    $navlink['parent'] = '<p class=backlink>&laquo; Back to '. l($parent_id ? $parent_title : 'directory', 'directory').'</p>';
   } 
   else {
-    $list['parent'] = '&laquo; Back to '. l($parent_id ? $parent_title : 'directory', 'evince/dir/category/'. $category_id .'/'. $parent_id);
+    $navlink['parent'] = '<p class=backlink>&laquo; Back to '. l($parent_id ? $parent_title : 'directory', 'evince/dir/category/'. $category_id .'/'. $parent_id).'</p>';
   }
   evince_dir_delete_nodes();
   
@@ -173,9 +173,10 @@ function evince_dir_cats_category_info($category_id, $term_id) {
     $list['children'][] = l($child_title, 'evince/dir/category/'. $category_id .'/'. $child_id);
   }
 
-  $lists = array('data' => $list['parent'], 'children' => array('data' => $list['term'], 'children' => $list['children']));
+  $navlinks = array('data' => array('data' => $navlink['parent']));
+  $lists = array('children' => array('data' => $list['term'], 'children' => $list['children']));
   
-  $output = theme('item_list', $lists);
+  $output = $navlink['parent'].theme('item_list', $lists);
 
   if($saved!=NULL) {
     $results = evince_api_records_in_term($category_id, $term_id, $saved);

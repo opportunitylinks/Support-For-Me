@@ -254,6 +254,9 @@ body.path-evince.path-dir #a-to-z {
 #postscript-two img {
   margin-top: 50px;
 }
+.icons {
+  font-size:0.813em;
+}
 .icons a {
   display: block;
   height: 80px;
@@ -297,6 +300,9 @@ body.path-evince.path-dir #a-to-z {
 .node p:last-child {
   margin-bottom: 0;
 }
+#main-content {
+  font-size:0.813em;
+}
 /* ###### lists ###### */
 #main-content ol, #main-content ul {
   margin-left: 20px;
@@ -315,10 +321,8 @@ body.path-evince.path-dir #a-to-z {
   margin-bottom: 0;
   padding: 10px 0;
   background: #f2fdfb;
-  font-size:0.813em;
 }
 #main-content .item-list ul.pager li {
-  font-size: 1.4em;
   line-height: 1;
   color: #000;
   padding: 3px 5px;
@@ -506,7 +510,7 @@ input.form-submit:hover {
 .page-evince-dir-atoz #main-content a:visited,
 a.atoz-link,
 a.atoz-link:visited {
-  font-size: 1.8em;
+  font-size: 1.463em;
   margin-right: 10px;
   margin-bottom: 10px;
   display: block;
@@ -537,6 +541,7 @@ td a.atoz-link, td a.atoz-link:hover {
 div#numentries {
   position: relative;
   top: -1em;
+  font-size:0.813em;
 }
 /* ###### tables ######## */
 th, td {
@@ -628,7 +633,6 @@ div#tabbed {
   margin-bottom: 20px;
   padding: 0 0 10px 0;
   background: #f2fdfb;
-  font-size:0.894em;
 }
 #filters fieldset legend {
   display: block;
@@ -730,6 +734,12 @@ legend a, legend a:visited {
 .calendar-calendar th.week,
 .calendar-calendar td.week {
   display:none;
+}
+.backlink {
+  margin-bottom:0px;
+}
+.date-nav div.date-heading {
+  font-size:1em !important;
 }
 /* ###### temporary stuff ###### */
 div.error {

@@ -121,7 +121,7 @@ ul#stockton-cats li a, ul#stockton-cats li a:visited {
   height: 210px;
   padding: 5px;
   text-align: center;
-  font-size: 1.4em;
+  font-size: 1.125em;
   text-decoration: none;
   line-height: 1.2;
   text-shadow: rgba(0, 0, 0, 0.496094) 0px -1px 1px;
@@ -159,7 +159,7 @@ td.views-field-phpcode {
   font-size:1em;
 }
 td.views-field-phpcode h4{
-  font-size: 0.894em;
+  font-size: 1em;
   color: #16567e;
   font-weight: 600;
 }
@@ -189,17 +189,14 @@ div .form-checkboxes a{
 }
 
 #main-content td h4{
-  font-size: 0.894em;
   color: #16567e;
   font-weight: 600;
 }
 
 #main-content td p{
   color: #0E3B58;
-  font-size: 0.894em;
 }
 
 #main-content td span{
   color: #00709e;
-  font-size: 0.894em;
 }
